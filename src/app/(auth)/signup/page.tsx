@@ -16,17 +16,45 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Brain } from "lucide-react";
 
-export default function LoginPage() {
+export default function SignUpPage() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
     setLoading(true);
 
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error);
+      setLoading(false);
+      return;
+    }
+
+    // Auto sign in after signup
     const result = await signIn("credentials", {
       email,
       password,
@@ -36,7 +64,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("Account created but sign-in failed. Please try logging in.");
     } else {
       window.location.href = "/dashboard";
     }
@@ -49,9 +77,9 @@ export default function LoginPage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600">
             <Brain className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-white">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl text-white">Create Account</CardTitle>
           <CardDescription className="text-slate-400">
-            Sign in to continue your interview prep journey
+            Start your data engineering interview prep journey
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -104,7 +132,7 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-slate-900 px-2 text-slate-500">
-                or continue with email
+                or sign up with email
               </span>
             </div>
           </div>
@@ -116,6 +144,20 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-slate-300">
+                Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-300">
                 Email
@@ -137,10 +179,26 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
+                className="border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-slate-300">
+                Confirm Password
+              </Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
                 className="border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
               />
             </div>
@@ -149,17 +207,17 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-indigo-600 hover:bg-indigo-500"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
 
           <p className="text-center text-sm text-slate-500">
-            Don&apos;t have an account?{" "}
+            Already have an account?{" "}
             <Link
-              href="/signup"
+              href="/login"
               className="text-indigo-400 hover:text-indigo-300"
             >
-              Sign up
+              Sign in
             </Link>
           </p>
         </CardContent>
