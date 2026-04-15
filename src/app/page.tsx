@@ -90,7 +90,7 @@ export default function LandingPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600">
               <Brain className="h-5 w-5 text-white" />
             </div>
-            <span className="font-semibold text-lg">Interview Coach</span>
+            <span className="font-semibold text-lg">Data Interview Coach</span>
           </div>
           <Link href="/login">
             <Button variant="outline" className="border-slate-700 bg-slate-900 hover:bg-slate-800">
@@ -250,7 +250,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between text-sm text-slate-500">
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
-            Interview Coach
+            Data Interview Coach
           </div>
           <div>&copy; {new Date().getFullYear()} All rights reserved.</div>
         </div>
