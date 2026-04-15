@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Brain, LogOut, User } from "lucide-react";
+import { Brain, LogOut, Settings, User } from "lucide-react";
 
 interface DashboardNavProps {
   user: {
@@ -59,9 +59,17 @@ export default function DashboardNav({ user }: DashboardNavProps) {
               <p className="text-xs text-slate-400">{user.email}</p>
             </div>
             <DropdownMenuSeparator className="bg-slate-800" />
-            <DropdownMenuItem className="text-slate-300 focus:bg-slate-800 focus:text-white cursor-pointer">
-              <User className="mr-2 h-4 w-4" />
-              Profile
+            <DropdownMenuItem className="text-slate-300 focus:bg-slate-800 focus:text-white cursor-pointer p-0">
+              <Link href="/settings" className="flex items-center w-full px-2 py-1.5">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-slate-300 focus:bg-slate-800 focus:text-white cursor-pointer p-0">
+              <Link href="/settings" className="flex items-center w-full px-2 py-1.5">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-slate-800" />
             <DropdownMenuItem

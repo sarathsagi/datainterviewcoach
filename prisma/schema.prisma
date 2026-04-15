@@ -20,9 +20,13 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Stripe
+  stripeCustomerId String? @unique
+
   accounts        Account[]
   sessions        Session[]
   profile         Profile?
+  subscription    Subscription?
   studyPlans      StudyPlan[]
   dailyProgress   DailyProgress[]
   problemAttempts ProblemAttempt[]
@@ -83,6 +87,37 @@ model EmailVerificationToken {
   createdAt DateTime @default(now())
 
   @@unique([email, token])
+}
+
+// ─── Billing Models ──────────────────────────────────────────
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeSubscriptionId String             @unique
+  stripePriceId        String
+  stripeCurrentPeriodEnd DateTime
+  status               SubscriptionStatus @default(ACTIVE)
+  plan                 SubscriptionPlan   @default(PRO_MONTHLY)
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+  TRIALING
+  INCOMPLETE
+}
+
+enum SubscriptionPlan {
+  PRO_MONTHLY
+  PRO_YEARLY
 }
 
 // ─── App Models ───────────────────────────────────────────────

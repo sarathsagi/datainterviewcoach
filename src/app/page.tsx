@@ -92,11 +92,16 @@ export default function LandingPage() {
             </div>
             <span className="font-semibold text-lg">Data Interview Coach</span>
           </div>
-          <Link href="/login">
-            <Button variant="outline" className="border-slate-700 bg-slate-900 hover:bg-slate-800">
-              Sign In
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/pricing" className="text-sm text-slate-400 hover:text-white transition-colors">
+              Pricing
+            </Link>
+            <Link href="/login">
+              <Button variant="outline" className="border-slate-700 bg-slate-900 hover:bg-slate-800">
+                Sign In
+              </Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -247,10 +252,18 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-8">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between text-sm text-slate-500">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
             Data Interview Coach
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/terms" className="hover:text-slate-300 transition-colors">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" className="hover:text-slate-300 transition-colors">
+              Privacy Policy
+            </Link>
           </div>
           <div>&copy; {new Date().getFullYear()} All rights reserved.</div>
         </div>
