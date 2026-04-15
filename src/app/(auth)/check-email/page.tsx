@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Brain, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
 export default function CheckEmailPage() {
+  return (
+    <Suspense>
+      <CheckEmailContent />
+    </Suspense>
+  );
+}
+
+function CheckEmailContent() {
   const searchParams = useSearchParams();
   const emailFromQuery = searchParams.get("email") || "";
 
