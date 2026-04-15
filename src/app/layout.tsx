@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Interview Coach | Ace Your Data Engineering Interview",
+  title: "Data Interview Coach | Ace Your Data Engineering Interview",
   description:
     "AI-powered interview prep coach that builds personalized study plans, tracks your progress, and helps you land your dream tech job.",
 };
