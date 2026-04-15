@@ -15,12 +15,19 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Brain } from "lucide-react";
+import { PasswordStrengthIndicator } from "@/components/ui/password-strength";
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+} from "@/lib/password";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,45 +35,57 @@ export default function SignUpPage() {
     e.preventDefault();
     setError("");
 
+    // Client-side validation
+    const nameError = validateName(name);
+    if (nameError) {
+      setError(nameError);
+      return;
+    }
+
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms of Service and Privacy Policy");
       return;
     }
 
     setLoading(true);
 
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setError(data.error);
+      if (!res.ok) {
+        setError(data.error);
+        setLoading(false);
+        return;
+      }
+
+      // Redirect to check-email page — user must verify before signing in
+      window.location.replace(`/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+    } catch {
+      setError("Something went wrong. Please try again.");
       setLoading(false);
-      return;
-    }
-
-    // Auto sign in after signup
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    setLoading(false);
-
-    if (result?.error) {
-      setError("Account created but sign-in failed. Please try logging in.");
-    } else {
-      window.location.href = "/dashboard";
     }
   }
 
@@ -155,6 +174,7 @@ export default function SignUpPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                maxLength={100}
                 className="border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
               />
             </div>
@@ -179,13 +199,14 @@ export default function SignUpPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="At least 8 characters"
+                placeholder="Create a strong password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
                 className="border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
               />
+              <PasswordStrengthIndicator password={password} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-slate-300">
@@ -201,11 +222,36 @@ export default function SignUpPage() {
                 minLength={8}
                 className="border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
               />
+              {confirmPassword && password !== confirmPassword && (
+                <p className="text-xs text-red-400">Passwords do not match</p>
+              )}
             </div>
+
+            {/* Terms of Service */}
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="terms" className="text-xs text-slate-400 leading-relaxed">
+                I agree to the{" "}
+                <Link href="/terms" className="text-indigo-400 hover:text-indigo-300 underline">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-indigo-400 hover:text-indigo-300 underline">
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+
             <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500"
+              disabled={loading || !agreedToTerms}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
             >
               {loading ? "Creating account..." : "Create Account"}
             </Button>

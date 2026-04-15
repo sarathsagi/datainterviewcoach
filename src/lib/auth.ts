@@ -5,6 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
+import { checkRateLimit } from "./rate-limit";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -28,8 +29,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required");
         }
 
+        // Rate limit by email to prevent brute force
+        const { allowed } = checkRateLimit(credentials.email, "login");
+        if (!allowed) {
+          throw new Error("Too many login attempts. Please try again later.");
+        }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email.trim().toLowerCase() },
         });
 
         if (!user || !user.password) {
@@ -43,6 +50,11 @@ export const authOptions: NextAuthOptions = {
 
         if (!isValid) {
           throw new Error("Invalid email or password");
+        }
+
+        // Require email verification for credentials users
+        if (!user.emailVerified) {
+          throw new Error("UNVERIFIED");
         }
 
         return {

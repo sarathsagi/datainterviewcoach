@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import AuthSessionProvider from "@/components/providers/session-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Data Interview Coach | Ace Your Data Engineering Interview",
   description:
-    "AI-powered interview prep coach that builds personalized study plans, tracks your progress, and helps you land your dream tech job.",
+    "AI-powered interview prep coach that builds personalized study plans, tracks your progress, and helps you land your dream data engineering job.",
 };
 
 export default function RootLayout({
@@ -29,7 +30,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-slate-950 text-white">
-        {children}
+        <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
     </html>
   );

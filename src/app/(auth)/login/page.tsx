@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Brain } from "lucide-react";
+import { validateEmail } from "@/lib/password";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -25,20 +26,42 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    // Client-side validation
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+      });
 
-    setLoading(false);
-
-    if (result?.error) {
-      setError("Invalid email or password");
-    } else {
-      window.location.href = "/dashboard";
+      if (result?.error) {
+        setLoading(false);
+        if (result.error === "UNVERIFIED") {
+          window.location.replace(`/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+          return;
+        }
+        setError("Invalid email or password");
+      } else {
+        // Use full page navigation so the server picks up the new session cookie
+        window.location.replace("/dashboard");
+      }
+    } catch {
+      setLoading(false);
+      setError("Something went wrong. Please try again.");
     }
   }
 
@@ -131,9 +154,17 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-300">
-                Password
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-slate-300">
+                  Password
+                </Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-indigo-400 hover:text-indigo-300"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
