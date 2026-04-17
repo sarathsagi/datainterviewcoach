@@ -73,9 +73,11 @@ export async function POST(request: Request) {
       { user: { id: user.id, name: user.name, email: user.email } },
       { status: 201 }
     );
-  } catch {
+  } catch (err) {
+    console.error("Signup error:", err);
+    const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
+      { error: message },
       { status: 500 }
     );
   }
