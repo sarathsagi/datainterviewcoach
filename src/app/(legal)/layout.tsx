@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Brain } from "lucide-react";
+import Image from "next/image";
 
 export default function LegalLayout({
   children,
@@ -13,7 +13,7 @@ export default function LegalLayout({
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600">
-              <Brain className="h-5 w-5 text-white" />
+              <Image src="/logo.svg" alt="Data Interview Coach" width={40} height={40} />
             </div>
             <span className="font-semibold text-lg">Data Interview Coach</span>
           </Link>
@@ -37,7 +37,7 @@ export default function LegalLayout({
       <footer className="border-t border-slate-800 py-8">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4" />
+            <Image src="/logo.svg" alt="Data Interview Coach" width={16} height={16} />
             Data Interview Coach
           </div>
           <div className="flex items-center gap-4">

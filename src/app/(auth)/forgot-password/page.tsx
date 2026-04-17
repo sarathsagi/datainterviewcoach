@@ -12,7 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Brain, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 import { validateEmail } from "@/lib/password";
 
 export default function ForgotPasswordPage() {
@@ -61,7 +62,7 @@ export default function ForgotPasswordPage() {
       <Card className="w-full max-w-md border-slate-800 bg-slate-900/80 backdrop-blur">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600">
-            <Brain className="h-8 w-8 text-white" />
+            <Image src="/logo.svg" alt="Data Interview Coach" width={48} height={48} />
           </div>
           <CardTitle className="text-2xl text-white">Reset Password</CardTitle>
           <CardDescription className="text-slate-400">

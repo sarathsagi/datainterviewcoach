@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" fill="none">
+  <defs>
+    <linearGradient id="bg-full" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+    <linearGradient id="accent-full" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a5b4fc"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ─── Icon mark: 40×40, offset (4,4) so it sits centered in 48px height ─── -->
+  <g transform="translate(4,4)">
+    <!-- Rounded-square background -->
+    <rect width="40" height="40" rx="9" fill="url(#bg-full)"/>
+    <!-- Subtle inner border -->
+    <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="8.25"
+          fill="none" stroke="rgba(165,180,252,0.15)" stroke-width="0.75"/>
+
+    <!-- Spoke edges from centre hub -->
+    <line x1="20" y1="20" x2="11.25" y2="12.5"  stroke="rgba(255,255,255,0.28)" stroke-width="0.9" stroke-linecap="round"/>
+    <line x1="20" y1="20" x2="28.75" y2="12.5"  stroke="rgba(255,255,255,0.28)" stroke-width="0.9" stroke-linecap="round"/>
+    <line x1="20" y1="20" x2="9.4"   y2="21.25" stroke="rgba(255,255,255,0.28)" stroke-width="0.9" stroke-linecap="round"/>
+    <line x1="20" y1="20" x2="30.6"  y2="21.25" stroke="rgba(255,255,255,0.28)" stroke-width="0.9" stroke-linecap="round"/>
+    <line x1="20" y1="20" x2="12.5"  y2="28.75" stroke="rgba(255,255,255,0.28)" stroke-width="0.9" stroke-linecap="round"/>
+    <line x1="20" y1="20" x2="27.5"  y2="28.75" stroke="rgba(255,255,255,0.28)" stroke-width="0.9" stroke-linecap="round"/>
+    <!-- Peripheral cross-connections -->
+    <line x1="11.25" y1="12.5"  x2="28.75" y2="12.5"  stroke="rgba(255,255,255,0.14)" stroke-width="0.65" stroke-linecap="round"/>
+    <line x1="9.4"   y1="21.25" x2="12.5"  y2="28.75" stroke="rgba(255,255,255,0.14)" stroke-width="0.65" stroke-linecap="round"/>
+    <line x1="30.6"  y1="21.25" x2="27.5"  y2="28.75" stroke="rgba(255,255,255,0.14)" stroke-width="0.65" stroke-linecap="round"/>
+    <line x1="11.25" y1="12.5"  x2="9.4"   y2="21.25" stroke="rgba(255,255,255,0.14)" stroke-width="0.65" stroke-linecap="round"/>
+    <line x1="28.75" y1="12.5"  x2="30.6"  y2="21.25" stroke="rgba(255,255,255,0.14)" stroke-width="0.65" stroke-linecap="round"/>
+
+    <!-- Brain lobe fill + outline -->
+    <path d="M13.75 16.25
+             C11.25 13.75 8.75 15 8.75 18.125
+             C8.75 20.625 10.625 21.875 12.5 21.875
+             C11.25 24.375 12.5 27.5 15 27.5
+             C16.25 27.5 17.5 26.25 17.5 25
+             L22.5 25
+             C22.5 26.25 23.75 27.5 25 27.5
+             C27.5 27.5 28.75 24.375 27.5 21.875
+             C29.375 21.875 31.25 20.625 31.25 18.125
+             C31.25 15 28.75 13.75 26.25 16.25
+             C25 13.125 22.5 11.25 20 11.25
+             C17.5 11.25 15 13.125 13.75 16.25 Z"
+          fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.2)"
+          stroke-width="0.75" stroke-linejoin="round"/>
+    <!-- Centre sulcus -->
+    <path d="M20 12 C19.5 15 20.5 18 20 21 C19.5 24 20 26 20 28"
+          stroke="rgba(255,255,255,0.13)" stroke-width="0.5" stroke-linecap="round" fill="none"/>
+
+    <!-- Outer satellite nodes -->
+    <circle cx="11.25" cy="12.5"  r="1.875"  fill="white" opacity="0.9"/>
+    <circle cx="28.75" cy="12.5"  r="1.875"  fill="white" opacity="0.9"/>
+    <circle cx="9.4"   cy="21.25" r="1.5625" fill="white" opacity="0.85"/>
+    <circle cx="30.6"  cy="21.25" r="1.5625" fill="white" opacity="0.85"/>
+    <circle cx="12.5"  cy="28.75" r="1.5625" fill="white" opacity="0.85"/>
+    <circle cx="27.5"  cy="28.75" r="1.5625" fill="white" opacity="0.85"/>
+
+    <!-- Central hub: glow ring + gradient fill + white core -->
+    <circle cx="20" cy="20" r="3.75"   fill="white" opacity="0.12"/>
+    <circle cx="20" cy="20" r="2.5"    fill="url(#accent-full)"/>
+    <circle cx="20" cy="20" r="1.4"    fill="white"/>
+  </g>
+
+  <!-- ─── Wordmark — single baseline, y=31 (~vertically centred for 15px cap-height in 48px) ─── -->
+  <text
+    x="56" y="31"
+    font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif"
+    font-size="15"
+    font-weight="600"
+    letter-spacing="-0.5"
+    fill="white"
+  >Data Interview <tspan fill="#818cf8" font-weight="700">Coach</tspan></text>
+</svg>

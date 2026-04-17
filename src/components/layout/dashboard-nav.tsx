@@ -10,7 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Brain, LogOut, Settings, User } from "lucide-react";
+import Image from "next/image";
+import { LogOut, Settings, User } from "lucide-react";
 
 interface DashboardNavProps {
   user: {
@@ -33,10 +34,13 @@ export default function DashboardNav({ user }: DashboardNavProps) {
     <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600">
-            <Brain className="h-5 w-5 text-white" />
-          </div>
-          <span className="font-semibold text-lg">Data Interview Coach</span>
+          <Image
+            src="/logo-full.svg"
+            alt="Data Interview Coach"
+            width={180}
+            height={36}
+            priority
+          />
         </Link>
 
         <DropdownMenu>
