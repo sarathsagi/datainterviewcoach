@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     const resetToken = await generatePasswordResetToken(normalizedEmail);
 
     // Build the reset URL
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXTAUTH_URL || "https://www.datainterviewcoach.com";
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken.token}`;
 
     await sendPasswordResetEmail(normalizedEmail, user.name || "", resetUrl);

@@ -60,14 +60,16 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send verification email (non-blocking — don't fail signup if email fails)
-    generateEmailVerificationToken(normalizedEmail)
-      .then((verificationToken) => {
-        const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-        const verifyUrl = `${baseUrl}/verify-email?token=${verificationToken.token}`;
-        return sendEmailVerification(normalizedEmail, name.trim(), verifyUrl);
-      })
-      .catch((err) => console.error("Failed to send verification email:", err));
+    // Send verification email — must be awaited before returning in serverless environments
+    try {
+      const verificationToken = await generateEmailVerificationToken(normalizedEmail);
+      const baseUrl = process.env.NEXTAUTH_URL || "https://www.datainterviewcoach.com";
+      const verifyUrl = `${baseUrl}/verify-email?token=${verificationToken.token}`;
+      await sendEmailVerification(normalizedEmail, name.trim(), verifyUrl);
+    } catch (emailErr) {
+      // Don't fail signup if email fails — user can resend from check-email page
+      console.error("Failed to send verification email:", emailErr);
+    }
 
     return NextResponse.json(
       { user: { id: user.id, name: user.name, email: user.email } },

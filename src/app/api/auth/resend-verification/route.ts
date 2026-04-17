@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     const verificationToken = await generateEmailVerificationToken(normalizedEmail);
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXTAUTH_URL || "https://www.datainterviewcoach.com";
     const verifyUrl = `${baseUrl}/verify-email?token=${verificationToken.token}`;
 
     await sendEmailVerification(normalizedEmail, user.name || "", verifyUrl);
