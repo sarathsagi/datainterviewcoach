@@ -88,7 +88,7 @@ export default function LandingPage() {
       <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image src="/logo-full.svg" alt="Data Interview Coach" width={160} height={32} />
+            <Image src="/logo-full.svg" alt="Data Interview Coach" width={240} height={48} />
           </div>
           <div className="flex items-center gap-4">
             <Link href="/pricing" className="text-sm text-slate-400 hover:text-white transition-colors">

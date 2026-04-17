@@ -37,8 +37,8 @@ export default function DashboardNav({ user }: DashboardNavProps) {
           <Image
             src="/logo-full.svg"
             alt="Data Interview Coach"
-            width={210}
-            height={36}
+            width={240}
+            height={48}
             priority
           />
         </Link>
