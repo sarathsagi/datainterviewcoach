@@ -75,9 +75,8 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     console.error("Signup error:", err);
-    const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { error: message },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }
