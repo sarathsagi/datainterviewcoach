@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User, BookOpen, LayoutDashboard } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 interface DashboardNavProps {
   user: {
@@ -29,19 +30,49 @@ export default function DashboardNav({ user }: DashboardNavProps) {
         .join("")
         .toUpperCase()
     : user.email?.[0]?.toUpperCase() ?? "U";
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/learn", label: "Learn", icon: BookOpen },
+  ];
 
   return (
     <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <Image
-            src="/logo-full.svg"
-            alt="Data Interview Coach"
-            width={240}
-            height={48}
-            priority
-          />
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image
+              src="/logo-full.svg"
+              alt="Data Interview Coach"
+              width={200}
+              height={40}
+              priority
+            />
+          </Link>
+
+          {/* Nav links */}
+          <div className="hidden sm:flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-slate-800 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger

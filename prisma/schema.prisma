@@ -23,14 +23,16 @@ model User {
   // Stripe
   stripeCustomerId String? @unique
 
-  accounts        Account[]
-  sessions        Session[]
-  profile         Profile?
-  subscription    Subscription?
-  studyPlans      StudyPlan[]
-  dailyProgress   DailyProgress[]
-  problemAttempts ProblemAttempt[]
-  aiConversations AIConversation[]
+  accounts           Account[]
+  sessions           Session[]
+  profile            Profile?
+  subscription       Subscription?
+  studyPlans         StudyPlan[]
+  dailyProgress      DailyProgress[]
+  problemAttempts    ProblemAttempt[]
+  aiConversations    AIConversation[]
+  pathProgress       UserPathProgress[]
+  moduleProgress     UserModuleProgress[]
 }
 
 model Account {
@@ -161,6 +163,81 @@ enum TopicCategory {
   SYSTEM_DESIGN
   DATA_MODELING
   CULTURE_FIT
+}
+
+// ─── Learning Content Models ──────────────────────────────────
+
+model LearningPath {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  description String
+  icon        String          @default("📚")
+  category    ContentCategory
+  level       SkillLevel
+  order       Int             @default(0)
+  isPublished Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+
+  modules      LearningModule[]
+  userProgress UserPathProgress[]
+}
+
+model LearningModule {
+  id              String   @id @default(cuid())
+  pathId          String
+  slug            String
+  title           String
+  description     String?
+  mediumUrl       String?
+  readTimeMinutes Int      @default(10)
+  order           Int      @default(0)
+  isPublished     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  path         LearningPath         @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  userProgress UserModuleProgress[]
+
+  @@unique([pathId, slug])
+}
+
+model UserPathProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  pathId      String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  path LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pathId])
+}
+
+model UserModuleProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  moduleId    String
+  completedAt DateTime  @default(now())
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+}
+
+enum ContentCategory {
+  DATA_MODELING
+  CDC
+  GCP
+  SNOWFLAKE
+  DATABRICKS
+  CI_CD
+  DATA_ARCHITECTURE
+  SYSTEM_DESIGN
+  AI_ENGINEERING
+  OPEN_TABLE_FORMATS
+  ESSENTIAL_SKILLS
 }
 
 model Problem {
