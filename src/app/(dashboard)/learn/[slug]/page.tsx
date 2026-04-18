@@ -182,7 +182,6 @@ export default async function LearnPathPage({ params }: PageProps) {
                           rel="noopener noreferrer"
                           className="flex-shrink-0 p-1 text-slate-500 hover:text-indigo-400 transition-colors"
                           title="Read on Medium"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
