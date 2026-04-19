@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
-import { LogOut, Settings, User, BookOpen, LayoutDashboard } from "lucide-react";
+import { LogOut, Settings, User, BookOpen, LayoutDashboard, Code2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 interface DashboardNavProps {
@@ -35,6 +35,7 @@ export default function DashboardNav({ user }: DashboardNavProps) {
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/learn", label: "Learn", icon: BookOpen },
+    { href: "/practice", label: "Practice", icon: Code2 },
   ];
 
   return (

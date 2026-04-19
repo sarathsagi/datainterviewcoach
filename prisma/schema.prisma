@@ -23,16 +23,18 @@ model User {
   // Stripe
   stripeCustomerId String? @unique
 
-  accounts           Account[]
-  sessions           Session[]
-  profile            Profile?
-  subscription       Subscription?
-  studyPlans         StudyPlan[]
-  dailyProgress      DailyProgress[]
-  problemAttempts    ProblemAttempt[]
-  aiConversations    AIConversation[]
-  pathProgress       UserPathProgress[]
-  moduleProgress     UserModuleProgress[]
+  accounts               Account[]
+  sessions               Session[]
+  profile                Profile?
+  subscription           Subscription?
+  studyPlans             StudyPlan[]
+  dailyProgress          DailyProgress[]
+  problemAttempts        ProblemAttempt[]
+  aiConversations        AIConversation[]
+  pathProgress           UserPathProgress[]
+  moduleProgress         UserModuleProgress[]
+  questionAttempts       UserQuestionAttempt[]
+  pathQuestionAttempts   UserPathQuestionAttempt[]
 }
 
 model Account {
@@ -181,6 +183,7 @@ model LearningPath {
 
   modules      LearningModule[]
   userProgress UserPathProgress[]
+  questions    PathQuestion[]
 }
 
 model LearningModule {
@@ -238,6 +241,78 @@ enum ContentCategory {
   AI_ENGINEERING
   OPEN_TABLE_FORMATS
   ESSENTIAL_SKILLS
+}
+
+// ─── Practice Question Models ─────────────────────────────────
+
+model PracticeQuestion {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  title       String
+  category    PracticeCategory
+  difficulty  Difficulty
+  description String
+  context     String?          // schema or setup code (markdown)
+  hints       String[]         @default([])
+  solution    String
+  explanation String
+  tags        String[]         @default([])
+  order       Int              @default(0)
+  isPublished Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+
+  attempts UserQuestionAttempt[]
+}
+
+model PathQuestion {
+  id          String   @id @default(cuid())
+  pathId      String
+  question    String
+  options     Json     // string[]
+  answer      Int      // index of correct option (0-based)
+  explanation String
+  order       Int      @default(0)
+
+  path     LearningPath             @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  attempts UserPathQuestionAttempt[]
+}
+
+model UserQuestionAttempt {
+  id         String         @id @default(cuid())
+  userId     String
+  questionId String
+  status     QuestionStatus
+  updatedAt  DateTime       @default(now()) @updatedAt
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question PracticeQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+}
+
+model UserPathQuestionAttempt {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  selected   Int
+  isCorrect  Boolean
+  createdAt  DateTime @default(now())
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question PathQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+}
+
+enum PracticeCategory {
+  SQL
+  PYTHON
+}
+
+enum QuestionStatus {
+  SOLVED
+  ATTEMPTED
+  SKIPPED
 }
 
 model Problem {
