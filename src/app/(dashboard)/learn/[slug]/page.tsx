@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { ModuleCheckbox } from "./module-checkbox";
+import { PathQuiz } from "./path-quiz";
 
 const LEVEL_COLORS: Record<string, string> = {
   BEGINNER: "bg-green-950 text-green-400 border-green-800",
@@ -50,6 +51,9 @@ export default async function LearnPathPage({ params }: PageProps) {
         where: { isPublished: true },
         orderBy: { order: "asc" },
       },
+      questions: {
+        orderBy: { order: "asc" },
+      },
     },
   });
 
@@ -64,6 +68,16 @@ export default async function LearnPathPage({ params }: PageProps) {
     select: { moduleId: true },
   });
   const completedModuleIds = new Set(completedModules.map((m) => m.moduleId));
+
+  // Get user's prior quiz answers for this path
+  const priorAttempts = await prisma.userPathQuestionAttempt.findMany({
+    where: {
+      userId: session.user.id,
+      questionId: { in: path.questions.map((q) => q.id) },
+    },
+    select: { questionId: true, selected: true },
+  });
+  const priorAttemptMap = new Map(priorAttempts.map((a) => [a.questionId, a.selected]));
 
   const completedCount = completedModuleIds.size;
   const totalCount = path.modules.length;
@@ -229,6 +243,22 @@ export default async function LearnPathPage({ params }: PageProps) {
             </Link>
           </CardContent>
         </Card>
+      )}
+
+      {/* Knowledge Check Quiz */}
+      {path.questions.length > 0 && (
+        <div className="border-t border-slate-800 pt-8">
+          <PathQuiz
+            questions={path.questions.map((q) => ({
+              id: q.id,
+              question: q.question,
+              options: q.options as string[],
+              answer: q.answer,
+              explanation: q.explanation,
+              userAnswer: priorAttemptMap.get(q.id) ?? null,
+            }))}
+          />
+        </div>
       )}
     </div>
   );
