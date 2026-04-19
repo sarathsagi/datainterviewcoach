@@ -35,6 +35,7 @@ model User {
   moduleProgress         UserModuleProgress[]
   questionAttempts       UserQuestionAttempt[]
   pathQuestionAttempts   UserPathQuestionAttempt[]
+  flashCardAttempts      UserFlashCardAttempt[]
 }
 
 model Account {
@@ -307,6 +308,34 @@ model UserPathQuestionAttempt {
 enum PracticeCategory {
   SQL
   PYTHON
+}
+
+// ─── Flashcard Models ─────────────────────────────────────────
+
+model FlashCard {
+  id          String   @id @default(cuid())
+  topic       String   // e.g. "Data Modeling", "SQL", "Streaming & CDC"
+  topicSlug   String   // e.g. "data-modeling", "sql"
+  front       String   // Concept / term / question
+  back        String   // Definition / explanation
+  order       Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  attempts UserFlashCardAttempt[]
+}
+
+model UserFlashCardAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  cardId    String
+  known     Boolean  // true = "Got it", false = "Review Again"
+  updatedAt DateTime @updatedAt
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card FlashCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
 }
 
 enum QuestionStatus {
