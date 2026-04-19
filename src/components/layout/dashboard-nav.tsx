@@ -11,7 +11,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
-import { LogOut, Settings, User, BookOpen, LayoutDashboard, Code2, Zap } from "lucide-react";
+import {
+  LogOut,
+  Settings,
+  User,
+  BookOpen,
+  LayoutDashboard,
+  Code2,
+  Zap,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 
 interface DashboardNavProps {
@@ -22,64 +30,64 @@ interface DashboardNavProps {
   };
 }
 
+const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/learn",     label: "Learn",     icon: BookOpen },
+  { href: "/practice",  label: "Practice",  icon: Code2 },
+  { href: "/quiz",      label: "Quiz",      icon: Zap },
+];
+
 export default function DashboardNav({ user }: DashboardNavProps) {
   const initials = user.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
     : user.email?.[0]?.toUpperCase() ?? "U";
-  const pathname = usePathname();
 
-  const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/learn", label: "Learn", icon: BookOpen },
-    { href: "/practice", label: "Practice", icon: Code2 },
-    { href: "/quiz", label: "Quiz", icon: Zap },
-  ];
+  const pathname = usePathname();
 
   return (
     <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="flex items-center gap-2">
+
+        {/* Left: logo + desktop nav */}
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
             <Image
               src="/logo-full.svg"
               alt="Data Interview Coach"
-              width={200}
-              height={40}
+              width={160}
+              height={32}
               priority
             />
           </Link>
 
-          {/* Nav links */}
-          <div className="hidden sm:flex items-center gap-1">
+          {/* Desktop nav — icon + label at md+, icon-only at sm */}
+          <div className="hidden sm:flex items-center gap-0.5">
             {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
               const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-slate-800 text-white"
                       : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  {/* Label hidden on sm, visible on md+ */}
+                  <span className="hidden md:inline">{item.label}</span>
                 </Link>
               );
             })}
           </div>
         </div>
 
+        {/* Right: avatar dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            className="relative h-9 w-9 rounded-full cursor-pointer"
-          >
+          <DropdownMenuTrigger className="relative h-9 w-9 rounded-full cursor-pointer flex-shrink-0">
             <Avatar className="h-9 w-9">
               <AvatarImage src={user.image ?? undefined} alt={user.name ?? ""} />
               <AvatarFallback className="bg-indigo-600 text-white text-sm">
@@ -87,15 +95,46 @@ export default function DashboardNav({ user }: DashboardNavProps) {
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent
             align="end"
             className="w-56 border-slate-800 bg-slate-900 text-white"
           >
+            {/* User info */}
             <div className="px-2 py-1.5">
               <p className="text-sm font-medium">{user.name}</p>
               <p className="text-xs text-slate-400">{user.email}</p>
             </div>
+
             <DropdownMenuSeparator className="bg-slate-800" />
+
+            {/* Mobile-only nav links (hidden sm:hidden means show only below sm) */}
+            <div className="sm:hidden">
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href || pathname.startsWith(item.href + "/");
+                const Icon = item.icon;
+                return (
+                  <DropdownMenuItem
+                    key={item.href}
+                    className={`cursor-pointer p-0 ${
+                      isActive ? "text-white" : "text-slate-300 focus:bg-slate-800 focus:text-white"
+                    }`}
+                  >
+                    <Link href={item.href} className="flex items-center w-full px-2 py-1.5 gap-2">
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                      {isActive && (
+                        <span className="ml-auto text-xs text-indigo-400">●</span>
+                      )}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+              <DropdownMenuSeparator className="bg-slate-800" />
+            </div>
+
+            {/* Profile & Settings */}
             <DropdownMenuItem className="text-slate-300 focus:bg-slate-800 focus:text-white cursor-pointer p-0">
               <Link href="/settings" className="flex items-center w-full px-2 py-1.5">
                 <User className="mr-2 h-4 w-4" />
@@ -108,7 +147,9 @@ export default function DashboardNav({ user }: DashboardNavProps) {
                 Settings
               </Link>
             </DropdownMenuItem>
+
             <DropdownMenuSeparator className="bg-slate-800" />
+
             <DropdownMenuItem
               className="text-red-400 focus:bg-slate-800 focus:text-red-300 cursor-pointer"
               onClick={() => signOut({ callbackUrl: "/" })}
@@ -118,6 +159,7 @@ export default function DashboardNav({ user }: DashboardNavProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
       </div>
     </nav>
   );
