@@ -19,7 +19,7 @@ export default function PricingPage() {
       >
         <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-between">
           <Link href="/" className="flex-shrink-0">
-            <Image src="/logo-full.svg" alt="Data Interview Coach" width={152} height={30} priority />
+            <Image src="/logo-full.svg" alt="Data Interview Coach" width={210} height={36} priority />
           </Link>
           <Link href="/login" className="text-sm text-white/50 hover:text-white transition-colors">
             Sign In
