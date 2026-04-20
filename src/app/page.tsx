@@ -76,10 +76,6 @@ export default function LandingPage() {
         />
 
         <div className="max-w-3xl mx-auto px-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-medium mb-8 tracking-wide uppercase">
-            AI-Powered Data Engineering Interview Prep
-          </div>
-
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.08] mb-6">
             Land Your Dream
             <br />
