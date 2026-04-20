@@ -8,17 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  DATA_MODELING: "Data Modeling",
-  CDC: "Change Data Capture",
-  GCP: "Google Cloud Platform",
-  SNOWFLAKE: "Snowflake",
-  DATABRICKS: "Databricks",
-  CI_CD: "CI/CD",
-  DATA_ARCHITECTURE: "Data Architecture",
-  SYSTEM_DESIGN: "System Design",
-  AI_ENGINEERING: "AI Engineering",
-  OPEN_TABLE_FORMATS: "Open Table Formats",
-  ESSENTIAL_SKILLS: "Essential Skills",
+  DATA_MODELING:    "Data Modeling",
+  SYSTEM_DESIGN:    "System Design",
+  ESSENTIAL_SKILLS: "Misc",
+  // legacy (unpublished paths — kept for safety)
+  CDC:              "Change Data Capture",
+  GCP:              "Google Cloud Platform",
+  SNOWFLAKE:        "Snowflake",
+  DATABRICKS:       "Databricks",
+  CI_CD:            "CI/CD",
+  DATA_ARCHITECTURE:"Data Architecture",
+  AI_ENGINEERING:   "AI Engineering",
+  OPEN_TABLE_FORMATS:"Open Table Formats",
 };
 
 const LEVEL_COLORS: Record<string, string> = {
