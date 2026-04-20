@@ -58,13 +58,13 @@ export const PRICES = {
   pro_monthly: {
     plan: "pro" as const,
     interval: "month" as const,
-    amount: 1900, // $19.00
+    amount: 999, // $9.99/month
     stripePriceId: process.env.STRIPE_PRO_MONTHLY_PRICE_ID ?? "",
   },
   pro_yearly: {
     plan: "pro" as const,
     interval: "year" as const,
-    amount: 14900, // $149.00 ($12.42/mo — save 21%)
+    amount: 5988, // $59.88/year ($4.99/mo — save 50%)
     stripePriceId: process.env.STRIPE_PRO_YEARLY_PRICE_ID ?? "",
   },
 } as const;
