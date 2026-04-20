@@ -10,7 +10,7 @@ import {
   BookOpen,
   CheckCircle2,
   Clock,
-  ExternalLink,
+  ChevronRight,
 } from "lucide-react";
 import { ModuleCheckbox } from "./module-checkbox";
 import { PathQuiz } from "./path-quiz";
@@ -157,70 +157,45 @@ export default async function LearnPathPage({ params }: PageProps) {
           const isCompleted = completedModuleIds.has(module.id);
 
           return (
-            <Card
+            <Link
               key={module.id}
-              className={`border transition-colors ${
-                isCompleted
-                  ? "border-green-900/50 bg-green-950/10"
-                  : "border-slate-800 bg-slate-900/50"
-              }`}
+              href={`/learn/${path.slug}/${module.slug}`}
+              className="block group"
             >
-              <CardContent className="py-4 px-4">
-                <div className="flex items-start gap-3">
-                  {/* Checkbox */}
-                  <ModuleCheckbox
-                    moduleId={module.id}
-                    pathId={path.id}
-                    initialCompleted={isCompleted}
-                  />
+              <div className={`rounded-xl border px-5 py-4 transition-colors flex items-center gap-4 ${
+                isCompleted
+                  ? "border-green-900/40 bg-green-950/10 hover:border-green-700/40"
+                  : "border-white/[0.08] bg-white/[0.02] hover:border-indigo-700/40 hover:bg-white/[0.04]"
+              }`}>
+                {/* Number */}
+                <span className="text-xs font-mono text-white/20 flex-shrink-0 w-5 text-right">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs text-slate-600 font-mono flex-shrink-0">
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                        <p
-                          className={`text-sm font-medium leading-snug ${
-                            isCompleted ? "text-slate-400 line-through" : "text-white"
-                          }`}
-                        >
-                          {module.title}
-                        </p>
-                      </div>
-                      {module.mediumUrl && (
-                        <a
-                          href={module.mediumUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-shrink-0 p-1 text-slate-500 hover:text-indigo-400 transition-colors"
-                          title="Read on Medium"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      )}
-                    </div>
+                {/* Completed dot */}
+                <div className={`h-2 w-2 rounded-full flex-shrink-0 ${
+                  isCompleted ? "bg-green-500" : "bg-white/10"
+                }`} />
 
-                    {module.description && (
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed ml-6">
-                        {module.description}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-3 mt-2 ml-6 text-xs text-slate-600">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{module.readTimeMinutes} min read</span>
-                      </div>
-                      {isCompleted && (
-                        <span className="text-green-500 font-medium">✓ Read</span>
-                      )}
-                    </div>
+                {/* Title + meta */}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium leading-snug ${
+                    isCompleted ? "text-white/40 line-through" : "text-white group-hover:text-indigo-300 transition-colors"
+                  }`}>
+                    {module.title}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-white/25">
+                    <Clock className="h-3 w-3" />
+                    <span>{module.readTimeMinutes} min read</span>
+                    {isCompleted && <span className="text-green-500">· Read</span>}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+
+                <ChevronRight className={`h-4 w-4 flex-shrink-0 transition-all ${
+                  isCompleted ? "text-green-600" : "text-white/20 group-hover:text-indigo-400 group-hover:translate-x-0.5"
+                }`} />
+              </div>
+            </Link>
           );
         })}
       </div>
