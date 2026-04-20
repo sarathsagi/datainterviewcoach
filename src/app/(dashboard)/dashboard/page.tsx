@@ -195,84 +195,94 @@ export default async function DashboardPage() {
 
   const hasPracticeActivity = totalProblemsSolved > 0 || sqlAttempted > 0 || pythonAttempted > 0;
 
+  const cardClass = "border-white/8 bg-white/[0.03] backdrop-blur-sm shadow-sm hover:bg-white/[0.05] transition-colors";
+  const statIconClass = "h-4 w-4 text-indigo-400 opacity-80";
+  const statLabelClass = "text-sm font-medium text-white/40";
+  const statSubClass = "text-xs text-white/30 mt-0.5";
+
   return (
     <div className="space-y-8">
       {/* Welcome */}
-      <div>
-        <h1 className="text-3xl font-bold">Welcome back, {firstName}!</h1>
-        <p className="text-slate-400 mt-1">
-          Continue your data engineering interview prep journey.
+      <div className="pb-2">
+        <h1 className="text-4xl font-bold tracking-tight">
+          Welcome back,{" "}
+          <span className="text-gradient">{firstName}</span>
+        </h1>
+        <p className="text-white/40 mt-2 text-base">
+          Your data engineering interview prep dashboard.
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">Problems Solved</CardTitle>
-            <Brain className="h-4 w-4 text-indigo-400" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className={cardClass}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-5 px-5">
+            <CardTitle className={statLabelClass}>Problems Solved</CardTitle>
+            <Brain className={statIconClass} />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalProblemsSolved}</div>
-            <p className="text-xs text-slate-500">
+          <CardContent className="px-5 pb-5">
+            <div className="text-3xl font-bold tracking-tight">{totalProblemsSolved}</div>
+            <p className={statSubClass}>
               {totalProblemsSolved === 0
-                ? "Start with SQL or Python practice"
+                ? "Start with SQL or Python"
                 : `${sqlSolved} SQL · ${pythonSolved} Python`}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">Quiz Score</CardTitle>
-            <Trophy className="h-4 w-4 text-indigo-400" />
+        <Card className={cardClass}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-5 px-5">
+            <CardTitle className={statLabelClass}>Quiz Score</CardTitle>
+            <Trophy className={statIconClass} />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-5 pb-5">
+            <div className="text-3xl font-bold tracking-tight">
               {quizPct !== null ? `${quizPct}%` : "—"}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className={statSubClass}>
               {quizAnswered > 0
-                ? `${quizCorrect}/${quizAnswered} questions correct`
-                : "Take the knowledge checks in Learn"}
+                ? `${quizCorrect}/${quizAnswered} correct`
+                : "Take knowledge checks"}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">Skill Level</CardTitle>
-            <Target className="h-4 w-4 text-indigo-400" />
+        <Card className={cardClass}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-5 px-5">
+            <CardTitle className={statLabelClass}>Skill Level</CardTitle>
+            <Target className={statIconClass} />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold capitalize">
+          <CardContent className="px-5 pb-5">
+            <div className="text-3xl font-bold tracking-tight capitalize">
               {profile.skillLevel.toLowerCase()}
             </div>
-            <p className="text-xs text-slate-500">{profile.hoursPerDay} hrs/day commitment</p>
+            <p className={statSubClass}>{profile.hoursPerDay} hrs/day</p>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">Interview Date</CardTitle>
-            <Calendar className="h-4 w-4 text-indigo-400" />
+        <Card className={cardClass}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-5 px-5">
+            <CardTitle className={statLabelClass}>Interview</CardTitle>
+            <Calendar className={statIconClass} />
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-5 pb-5">
             {daysUntilInterview !== null ? (
               <>
-                <div className={`text-2xl font-bold ${daysUntilInterview <= 14 ? "text-red-400" : daysUntilInterview <= 30 ? "text-yellow-400" : ""}`}>
-                  {daysUntilInterview > 0 ? `${daysUntilInterview} days` : "Today!"}
+                <div className={`text-3xl font-bold tracking-tight ${
+                  daysUntilInterview <= 14 ? "text-red-400" : daysUntilInterview <= 30 ? "text-yellow-400" : ""
+                }`}>
+                  {daysUntilInterview > 0 ? `${daysUntilInterview}d` : "Today!"}
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className={statSubClass}>
                   {profile.interviewDate!.toLocaleDateString("en-US", {
-                    month: "short", day: "numeric", year: "numeric",
+                    month: "short", day: "numeric",
                   })}
                 </p>
               </>
             ) : (
               <>
-                <div className="text-2xl font-bold">Not set</div>
-                <p className="text-xs text-slate-500">Set your target date in settings</p>
+                <div className="text-3xl font-bold tracking-tight text-white/30">—</div>
+                <p className={statSubClass}>Not set</p>
               </>
             )}
           </CardContent>
@@ -281,16 +291,21 @@ export default async function DashboardPage() {
 
       {/* Target Companies */}
       {profile.targetCompanies.length > 0 && (
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardHeader>
-            <CardTitle>Target Companies</CardTitle>
+        <Card className={cardClass}>
+          <CardHeader className="px-5 pt-5 pb-3">
+            <CardTitle className="text-sm font-semibold text-white/60 uppercase tracking-widest">
+              Targeting
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-5 pb-5">
             <div className="flex flex-wrap gap-2">
               {profile.targetCompanies.map((company) => (
-                <Badge key={company} className="bg-indigo-950 text-indigo-300 border-indigo-800">
+                <span
+                  key={company}
+                  className="text-sm px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-medium"
+                >
                   {company}
-                </Badge>
+                </span>
               ))}
             </div>
           </CardContent>
@@ -298,10 +313,10 @@ export default async function DashboardPage() {
       )}
 
       {/* ── Practice Progress ──────────────────────────────────────────────── */}
-      <Card className="border-slate-800 bg-slate-900/50">
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Code2 className="h-5 w-5 text-indigo-400" />
+      <Card className={cardClass}>
+        <CardHeader className="flex flex-row items-center justify-between pb-3 px-5 pt-5">
+          <CardTitle className="flex items-center gap-2 text-white/80">
+            <Code2 className="h-4 w-4 text-indigo-400" />
             Practice Progress
           </CardTitle>
           <Link
@@ -479,10 +494,10 @@ export default async function DashboardPage() {
       </Card>
 
       {/* ── Learning Progress ──────────────────────────────────────────────── */}
-      <Card className="border-slate-800 bg-slate-900/50">
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-indigo-400" />
+      <Card className={cardClass}>
+        <CardHeader className="flex flex-row items-center justify-between pb-3 px-5 pt-5">
+          <CardTitle className="flex items-center gap-2 text-white/80">
+            <BookOpen className="h-4 w-4 text-indigo-400" />
             Learning Progress
           </CardTitle>
           <Link
