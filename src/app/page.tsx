@@ -24,7 +24,7 @@ const pillars = [
   {
     icon: Zap,
     title: "Quiz Mode",
-    description: "Flashcard-style rapid review across 8 topic decks — flip, recall, rate your confidence.",
+    description: "Flashcard-style rapid review across 8 topic decks — flip, recall, and rate your confidence.",
   },
   {
     icon: BarChart3,
@@ -32,6 +32,18 @@ const pillars = [
     description: "See your weak areas, track streaks, and know exactly where you stand before your interview.",
   },
 ];
+
+/*
+  Type scale (applied consistently across every section):
+  ─────────────────────────────────────────────────────
+  Hero H1          text-5xl / sm:text-6xl  font-bold
+  Section heading  text-3xl                font-bold
+  Section subtext  text-base               text-white/40
+  Card title       text-base               font-semibold
+  Card body        text-sm                 text-white/40
+  Feature list     text-sm                 text-white/50 or /70
+  Labels / tags    text-xs                 uppercase tracking-widest
+*/
 
 export default function LandingPage() {
   return (
@@ -65,7 +77,6 @@ export default function LandingPage() {
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="relative pt-24 pb-20 text-center overflow-hidden">
-        {/* ambient glow */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 -z-10"
@@ -74,35 +85,29 @@ export default function LandingPage() {
               "radial-gradient(ellipse 70% 40% at 50% -5%, oklch(0.50 0.24 264 / 12%) 0%, transparent 70%)",
           }}
         />
-
         <div className="max-w-3xl mx-auto px-4">
+          {/* text-5xl / sm:text-6xl — hero only */}
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.08] mb-6">
             Land Your Dream
             <br />
             <span className="text-indigo-400">Data Engineering Role.</span>
           </h1>
 
-          <p className="text-lg text-white/50 max-w-xl mx-auto mb-10 leading-relaxed">
+          {/* text-base for hero subtext */}
+          <p className="text-base text-white/50 max-w-xl mx-auto mb-10 leading-relaxed">
             Practice SQL and Python, master key concepts, quiz yourself on flashcards,
             and track exactly where you need to improve — all in one focused platform.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup">
-              <Button
-                size="lg"
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 gap-2 text-base h-11"
-              >
+              <Button size="lg" className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 gap-2 text-base h-11">
                 Start Free
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="/pricing">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/15 bg-white/5 hover:bg-white/8 text-white/70 hover:text-white px-8 text-base h-11"
-              >
+              <Button size="lg" variant="outline" className="border-white/15 bg-white/5 hover:bg-white/8 text-white/70 hover:text-white px-8 text-base h-11">
                 See Pricing
               </Button>
             </Link>
@@ -113,8 +118,10 @@ export default function LandingPage() {
       {/* ── What you get ─────────────────────────────────────────────── */}
       <section className="py-20 border-t border-white/[0.06]">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center mb-2">Everything you need to prep</h2>
-          <p className="text-white/40 text-center text-sm mb-12">
+          {/* text-3xl — consistent section heading */}
+          <h2 className="text-3xl font-bold text-center mb-3">Everything you need to prep</h2>
+          {/* text-base — consistent section subtext */}
+          <p className="text-base text-white/40 text-center mb-12">
             No fluff. Just the tools that move the needle.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -123,13 +130,15 @@ export default function LandingPage() {
               return (
                 <div
                   key={p.title}
-                  className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-5 hover:border-indigo-700/40 hover:bg-white/[0.05] transition-colors"
+                  className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-6 hover:border-indigo-700/40 hover:bg-white/[0.05] transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-lg bg-indigo-600/15 border border-indigo-500/20 flex items-center justify-center mb-4">
-                    <Icon className="h-4.5 w-4.5 text-indigo-400" />
+                  <div className="h-10 w-10 rounded-lg bg-indigo-600/15 border border-indigo-500/20 flex items-center justify-center mb-4">
+                    <Icon className="h-5 w-5 text-indigo-400" />
                   </div>
-                  <h3 className="text-sm font-semibold mb-1.5">{p.title}</h3>
-                  <p className="text-xs text-white/40 leading-relaxed">{p.description}</p>
+                  {/* text-base — card title */}
+                  <h3 className="text-base font-semibold mb-2">{p.title}</h3>
+                  {/* text-sm — card body */}
+                  <p className="text-sm text-white/40 leading-relaxed">{p.description}</p>
                 </div>
               );
             })}
@@ -140,33 +149,36 @@ export default function LandingPage() {
       {/* ── Pricing ──────────────────────────────────────────────────── */}
       <section className="py-20 border-t border-white/[0.06]">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold mb-2">Simple, honest pricing</h2>
-          <p className="text-white/40 text-sm mb-12">Start free. Upgrade when you're ready. Cancel anytime.</p>
+          {/* text-3xl — consistent section heading */}
+          <h2 className="text-3xl font-bold mb-3">Simple, honest pricing</h2>
+          {/* text-base — consistent section subtext */}
+          <p className="text-base text-white/40 mb-12">Start free. Upgrade when you're ready. Cancel anytime.</p>
 
           <div className="grid sm:grid-cols-2 gap-4 text-left">
 
             {/* Free */}
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-4">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-5">
               <div>
-                <p className="text-xs text-white/40 uppercase tracking-widest mb-1">Free</p>
+                {/* text-xs — plan label */}
+                <p className="text-xs text-white/40 uppercase tracking-widest mb-2">Free</p>
                 <div className="flex items-end gap-1">
                   <span className="text-4xl font-bold">$0</span>
-                  <span className="text-white/40 text-sm mb-1">/month</span>
+                  <span className="text-base text-white/40 mb-1">/month</span>
                 </div>
               </div>
               <Link href="/signup">
-                <Button variant="outline" className="w-full border-white/15 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white">
+                <Button variant="outline" className="w-full border-white/15 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-sm">
                   Get Started Free
                 </Button>
               </Link>
-              <ul className="space-y-2.5 text-sm text-white/50">
+              <ul className="space-y-3">
                 {[
                   "5 practice problems per day",
                   "Access to all learning paths",
                   "Quiz mode — all decks",
                   "Basic progress tracking",
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-white/50">
                     <CheckCircle2 className="h-4 w-4 text-white/25 mt-0.5 shrink-0" />
                     {f}
                   </li>
@@ -175,26 +187,27 @@ export default function LandingPage() {
             </div>
 
             {/* Pro */}
-            <div className="rounded-xl border border-indigo-500/50 bg-indigo-500/[0.06] p-6 space-y-4 relative">
+            <div className="rounded-xl border border-indigo-500/50 bg-indigo-500/[0.06] p-6 space-y-5 relative">
               <div className="absolute -top-3 left-5">
                 <span className="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-xs font-medium">
                   Most Popular
                 </span>
               </div>
               <div>
-                <p className="text-xs text-indigo-400 uppercase tracking-widest mb-1">Pro</p>
+                {/* text-xs — plan label */}
+                <p className="text-xs text-indigo-400 uppercase tracking-widest mb-2">Pro</p>
                 <div className="flex items-end gap-1">
                   <span className="text-4xl font-bold">$9.99</span>
-                  <span className="text-white/40 text-sm mb-1">/month</span>
+                  <span className="text-base text-white/40 mb-1">/month</span>
                 </div>
-                <p className="text-xs text-green-400 mt-1">or $4.99/mo billed yearly — save 50%</p>
+                <p className="text-sm text-green-400 mt-1.5">or $4.99/mo billed yearly — save 50%</p>
               </div>
               <Link href="/pricing">
-                <Button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white">
+                <Button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm">
                   Upgrade to Pro
                 </Button>
               </Link>
-              <ul className="space-y-2.5 text-sm text-white/70">
+              <ul className="space-y-3">
                 {[
                   "Unlimited practice problems",
                   "AI hints & coaching on every problem",
@@ -203,7 +216,7 @@ export default function LandingPage() {
                   "Progress analytics & readiness score",
                   "Priority support",
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2">
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-white/70">
                     <CheckCircle2 className="h-4 w-4 text-indigo-400 mt-0.5 shrink-0" />
                     {f}
                   </li>
@@ -217,15 +230,14 @@ export default function LandingPage() {
       {/* ── Final CTA ────────────────────────────────────────────────── */}
       <section className="py-20 border-t border-white/[0.06]">
         <div className="max-w-xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold mb-3">Ready to start?</h2>
-          <p className="text-white/40 text-sm mb-8">
+          {/* text-3xl — consistent section heading */}
+          <h2 className="text-3xl font-bold mb-3">Ready to start?</h2>
+          {/* text-base — consistent section subtext */}
+          <p className="text-base text-white/40 mb-8">
             Free to use. No credit card required.
           </p>
           <Link href="/signup">
-            <Button
-              size="lg"
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-10 gap-2 text-base h-11"
-            >
+            <Button size="lg" className="bg-indigo-600 hover:bg-indigo-500 text-white px-10 gap-2 text-base h-11">
               Start Prepping Free
               <ArrowRight className="h-4 w-4" />
             </Button>
