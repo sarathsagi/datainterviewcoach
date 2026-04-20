@@ -13,10 +13,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import {
   LogOut,
-  Settings,
   User,
   BookOpen,
-  LayoutDashboard,
+  TrendingUp,
   Code2,
   Zap,
 } from "lucide-react";
@@ -31,10 +30,10 @@ interface DashboardNavProps {
 }
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/learn",     label: "Learn",     icon: BookOpen },
   { href: "/practice",  label: "Practice",  icon: Code2 },
+  { href: "/learn",     label: "Learn",     icon: BookOpen },
   { href: "/quiz",      label: "Quiz",      icon: Zap },
+  { href: "/dashboard", label: "Progress",  icon: TrendingUp },
 ];
 
 export default function DashboardNav({ user }: DashboardNavProps) {

@@ -3,9 +3,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Code2, Database, CheckCircle2, Clock, ArrowRight, TrendingUp } from "lucide-react";
+import { ArrowRight, Code2, Database } from "lucide-react";
 
 export default async function PracticePage() {
   const session = await getServerSession(authOptions);
@@ -17,199 +15,154 @@ export default async function PracticePage() {
   });
   if (!profile?.onboardingDone) redirect("/onboarding");
 
-  // Counts per category
   const [sqlTotal, pythonTotal, sqlAttempts, pythonAttempts] = await Promise.all([
     prisma.practiceQuestion.count({ where: { category: "SQL", isPublished: true } }),
     prisma.practiceQuestion.count({ where: { category: "PYTHON", isPublished: true } }),
     prisma.userQuestionAttempt.findMany({
-      where: {
-        userId: session.user.id,
-        question: { category: "SQL" },
-      },
+      where: { userId: session.user.id, question: { category: "SQL" } },
       select: { status: true },
     }),
     prisma.userQuestionAttempt.findMany({
-      where: {
-        userId: session.user.id,
-        question: { category: "PYTHON" },
-      },
+      where: { userId: session.user.id, question: { category: "PYTHON" } },
       select: { status: true },
     }),
   ]);
 
-  const sqlSolved = sqlAttempts.filter((a) => a.status === "SOLVED").length;
+  const sqlSolved    = sqlAttempts.filter((a) => a.status === "SOLVED").length;
   const pythonSolved = pythonAttempts.filter((a) => a.status === "SOLVED").length;
-  const totalSolved = sqlSolved + pythonSolved;
-  const totalQuestions = sqlTotal + pythonTotal;
 
-  const categories = [
+  const tracks = [
     {
-      id: "sql",
-      title: "SQL Practice",
-      description:
-        "Master the queries that appear in every data engineering interview — window functions, CTEs, aggregations, SCD patterns, and warehouse-specific optimizations.",
-      icon: Database,
-      color: "indigo",
-      href: "/practice/sql",
-      total: sqlTotal,
-      solved: sqlSolved,
-      topics: ["Aggregation & Grouping", "Window Functions", "CTEs & Subqueries", "JOIN Patterns", "Data Warehouse SQL"],
-      comingSoon: false,
+      id:          "sql",
+      href:        "/practice/sql",
+      icon:        Database,
+      label:       "SQL",
+      title:       "SQL Practice",
+      description: "Window functions, CTEs, aggregations, SCD patterns, and warehouse-specific optimisations — the queries that appear in every data engineering interview.",
+      topics:      ["Aggregation & Grouping", "Window Functions", "CTEs & Subqueries", "JOIN Patterns", "Warehouse SQL"],
+      total:       sqlTotal,
+      solved:      sqlSolved,
+      accent:      "indigo",
     },
     {
-      id: "python",
-      title: "Python Practice",
-      description:
-        "Data engineering Python — generators, decorators, pandas patterns, ETL building blocks, and the coding patterns that show up in take-home assessments.",
-      icon: Code2,
-      color: "violet",
-      href: "/practice/python",
-      total: pythonTotal,
-      solved: pythonSolved,
-      topics: ["Data Manipulation", "ETL Patterns", "Generators & Iterators", "Decorators", "Schema Validation"],
-      comingSoon: pythonTotal === 0,
+      id:          "python",
+      href:        "/practice/python",
+      icon:        Code2,
+      label:       "Python",
+      title:       "Python Practice",
+      description: "Generators, decorators, pandas patterns, ETL building blocks, and the coding patterns that appear in take-home assessments.",
+      topics:      ["Data Manipulation", "ETL Patterns", "Generators & Iterators", "Decorators", "Schema Validation"],
+      total:       pythonTotal,
+      solved:      pythonSolved,
+      accent:      "violet",
     },
-  ];
+  ] as const;
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-10">
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Practice</h1>
-        <p className="text-slate-400 mt-1">
-          Write real queries and code. Read concepts, then prove you can apply them.
+        <p className="text-base text-white/40 mt-1">
+          Write real queries and code. Prove you can apply what you know.
         </p>
       </div>
 
-      {/* Overall stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardContent className="pt-5 text-center">
-            <div className="text-3xl font-bold text-indigo-400">{totalSolved}</div>
-            <div className="text-xs text-slate-500 mt-1">Problems Solved</div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardContent className="pt-5 text-center">
-            <div className="text-3xl font-bold text-indigo-400">{totalQuestions}</div>
-            <div className="text-xs text-slate-500 mt-1">Total Problems</div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-800 bg-slate-900/50">
-          <CardContent className="pt-5 text-center">
-            <div className="text-3xl font-bold text-indigo-400">
-              {totalQuestions > 0 ? Math.round((totalSolved / totalQuestions) * 100) : 0}%
-            </div>
-            <div className="text-xs text-slate-500 mt-1">Completion</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Category cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {categories.map((cat) => {
-          const Icon = cat.icon;
-          const pct = cat.total > 0 ? Math.round((cat.solved / cat.total) * 100) : 0;
+      {/* SQL / Python — primary split */}
+      <div className="grid md:grid-cols-2 gap-5">
+        {tracks.map((track) => {
+          const Icon  = track.icon;
+          const pct   = track.total > 0 ? Math.round((track.solved / track.total) * 100) : 0;
+          const isViolet = track.accent === "violet";
 
           return (
-            <div key={cat.id} className="relative">
-              {cat.comingSoon && (
-                <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
-                  <Badge className="bg-slate-800 text-slate-300 border-slate-700 text-sm px-4 py-2">
-                    Coming in Phase 2
-                  </Badge>
+            <Link key={track.id} href={track.href} className="group block">
+              <div className={`h-full rounded-2xl border p-7 transition-all duration-150 ${
+                isViolet
+                  ? "border-violet-500/30 bg-violet-500/[0.04] hover:border-violet-500/50 hover:bg-violet-500/[0.07]"
+                  : "border-indigo-500/30 bg-indigo-500/[0.04] hover:border-indigo-500/50 hover:bg-indigo-500/[0.07]"
+              }`}>
+
+                {/* Icon + arrow */}
+                <div className="flex items-start justify-between mb-5">
+                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center border ${
+                    isViolet
+                      ? "bg-violet-600/15 border-violet-500/25"
+                      : "bg-indigo-600/15 border-indigo-500/25"
+                  }`}>
+                    <Icon className={`h-6 w-6 ${isViolet ? "text-violet-400" : "text-indigo-400"}`} />
+                  </div>
+                  <ArrowRight className={`h-5 w-5 mt-1 transition-transform group-hover:translate-x-0.5 ${
+                    isViolet ? "text-violet-500/50 group-hover:text-violet-400" : "text-indigo-500/50 group-hover:text-indigo-400"
+                  }`} />
                 </div>
-              )}
-              <Link href={cat.href} className={cat.comingSoon ? "pointer-events-none" : ""}>
-                <Card className="border-slate-800 bg-slate-900/50 hover:border-indigo-700/50 hover:bg-slate-900 transition-all h-full group">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-lg bg-indigo-950/60 border border-indigo-900/40">
-                          <Icon className="h-6 w-6 text-indigo-400" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg group-hover:text-indigo-300 transition-colors">
-                            {cat.title}
-                          </CardTitle>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {cat.solved} / {cat.total} solved
-                          </p>
-                        </div>
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-slate-600 group-hover:text-indigo-400 transition-colors mt-1" />
-                    </div>
-                  </CardHeader>
 
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-slate-400 leading-relaxed">{cat.description}</p>
+                {/* Title */}
+                <h2 className="text-xl font-bold mb-2 group-hover:text-white transition-colors">
+                  {track.title}
+                </h2>
 
-                    {/* Topics */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {cat.topics.map((t) => (
-                        <span
-                          key={t}
-                          className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
+                {/* Description */}
+                <p className="text-sm text-white/40 leading-relaxed mb-5">
+                  {track.description}
+                </p>
 
-                    {/* Progress */}
-                    <div>
-                      <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-                        <span>Progress</span>
-                        <span>{pct}%</span>
-                      </div>
-                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-indigo-600 rounded-full transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            </div>
+                {/* Topics */}
+                <div className="flex flex-wrap gap-1.5 mb-6">
+                  {track.topics.map((t) => (
+                    <span
+                      key={t}
+                      className={`text-xs px-2.5 py-0.5 rounded-full border ${
+                        isViolet
+                          ? "bg-violet-500/10 border-violet-500/20 text-violet-300/70"
+                          : "bg-indigo-500/10 border-indigo-500/20 text-indigo-300/70"
+                      }`}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Progress */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs text-white/30">
+                    <span>{track.solved} of {track.total} solved</span>
+                    <span>{pct}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${isViolet ? "bg-violet-500" : "bg-indigo-500"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+
+              </div>
+            </Link>
           );
         })}
       </div>
 
-      {/* Tips */}
-      <Card className="border-slate-800 bg-slate-900/50">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-indigo-400" />
-            How to Use Practice Effectively
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ol className="space-y-2 text-sm text-slate-400">
-            <li className="flex gap-2">
-              <span className="text-indigo-400 font-bold flex-shrink-0">1.</span>
-              <span>Read the problem and schema carefully — identify what the question is really asking.</span>
+      {/* How to practice */}
+      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-6">
+        <h3 className="text-base font-semibold mb-4">How to practice effectively</h3>
+        <ol className="space-y-2.5">
+          {[
+            "Read the problem carefully — identify what it's really asking before writing a single line.",
+            "Write your answer first, before revealing any hints or the solution.",
+            "Reveal hints one at a time if stuck — don't jump straight to the solution.",
+            "After reviewing the solution, mark it Solved or Need Practice and revisit the latter before your interview.",
+            "For hard problems, explain your reasoning out loud — interviewers care more about your thought process than perfect syntax.",
+          ].map((tip, i) => (
+            <li key={i} className="flex gap-3 text-sm text-white/40">
+              <span className="text-indigo-400 font-semibold shrink-0">{i + 1}.</span>
+              {tip}
             </li>
-            <li className="flex gap-2">
-              <span className="text-indigo-400 font-bold flex-shrink-0">2.</span>
-              <span>Write your answer in the scratch pad <em>before</em> revealing hints or the solution.</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-indigo-400 font-bold flex-shrink-0">3.</span>
-              <span>Reveal hints one at a time if stuck — don&apos;t jump straight to the solution.</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-indigo-400 font-bold flex-shrink-0">4.</span>
-              <span>After seeing the solution, mark it as <span className="text-green-400">Solved</span> or <span className="text-yellow-400">Need Practice</span> — revisit the latter before your interview.</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-indigo-400 font-bold flex-shrink-0">5.</span>
-              <span>For Hard problems, focus on explaining your reasoning out loud — interviewers care more about your thought process than perfect syntax.</span>
-            </li>
-          </ol>
-        </CardContent>
-      </Card>
+          ))}
+        </ol>
+      </div>
+
     </div>
   );
 }
