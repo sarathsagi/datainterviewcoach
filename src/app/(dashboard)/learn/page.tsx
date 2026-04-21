@@ -3,30 +3,66 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Fragment } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, CheckCircle2, Clock, ChevronRight } from "lucide-react";
+import { BookOpen, CheckCircle2, Clock, ArrowRight, Lock } from "lucide-react";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  DATA_MODELING:    "Data Modeling",
-  SYSTEM_DESIGN:    "System Design",
-  ESSENTIAL_SKILLS: "Misc",
-  // legacy (unpublished paths — kept for safety)
-  CDC:              "Change Data Capture",
-  GCP:              "Google Cloud Platform",
-  SNOWFLAKE:        "Snowflake",
-  DATABRICKS:       "Databricks",
-  CI_CD:            "CI/CD",
-  DATA_ARCHITECTURE:"Data Architecture",
-  AI_ENGINEERING:   "AI Engineering",
-  OPEN_TABLE_FORMATS:"Open Table Formats",
+// ─── Track definitions ────────────────────────────────────────────────────────
+const TRACKS = [
+  {
+    category: "DATA_MODELING",
+    title: "Data Modeling",
+    icon: "📐",
+    description:
+      "Master dimensional modeling from first principles to FAANG-level exercises.",
+  },
+  {
+    category: "SYSTEM_DESIGN",
+    title: "Data Engineering System Design",
+    icon: "🏗️",
+    description:
+      "From ELT fundamentals and tool deep-dives to complete end-to-end system designs.",
+  },
+  {
+    category: "ESSENTIAL_SKILLS",
+    title: "Essential Skills & Misc",
+    icon: "🔧",
+    description:
+      "Open table formats, CDC, observability, and other key data engineering concepts.",
+  },
+];
+
+// Level display order
+const LEVEL_ORDER: Record<string, number> = {
+  BEGINNER: 0,
+  INTERMEDIATE: 1,
+  ADVANCED: 2,
 };
 
-const LEVEL_COLORS: Record<string, string> = {
-  BEGINNER: "bg-green-950 text-green-400 border-green-800",
-  INTERMEDIATE: "bg-yellow-950 text-yellow-400 border-yellow-800",
-  ADVANCED: "bg-red-950 text-red-400 border-red-800",
+const LEVEL_BADGE: Record<string, string> = {
+  BEGINNER:     "bg-green-950 text-green-400 border border-green-800",
+  INTERMEDIATE: "bg-yellow-950 text-yellow-400 border border-yellow-800",
+  ADVANCED:     "bg-red-950 text-red-400 border border-red-800",
 };
+
+const LEVEL_PROGRESS_COLOR: Record<string, string> = {
+  BEGINNER:     "bg-green-500",
+  INTERMEDIATE: "bg-yellow-500",
+  ADVANCED:     "bg-red-500",
+};
+
+const LEVEL_CARD_ACCENT: Record<string, string> = {
+  BEGINNER:     "hover:border-green-700/60",
+  INTERMEDIATE: "hover:border-yellow-700/60",
+  ADVANCED:     "hover:border-red-700/60",
+};
+
+// Strip "Category — " prefix for compact card titles
+function shortTitle(title: string): string {
+  const parts = title.split(" — ");
+  return parts.length > 1 ? parts.slice(1).join(" — ") : title;
+}
 
 export default async function LearnPage() {
   const session = await getServerSession(authOptions);
@@ -38,7 +74,7 @@ export default async function LearnPage() {
   });
   if (!profile?.onboardingDone) redirect("/onboarding");
 
-  // Fetch all published paths with module counts and user progress
+  // Fetch all published paths with modules + user progress
   const paths = await prisma.learningPath.findMany({
     where: { isPublished: true },
     orderBy: { order: "asc" },
@@ -54,49 +90,71 @@ export default async function LearnPage() {
     },
   });
 
-  // Get all completed modules for this user
+  // Completed module IDs for this user
   const completedModules = await prisma.userModuleProgress.findMany({
     where: { userId: session.user.id },
     select: { moduleId: true },
   });
-  const completedModuleIds = new Set(completedModules.map((m) => m.moduleId));
+  const completedIds = new Set(completedModules.map((m) => m.moduleId));
 
-  const totalModules = paths.reduce((sum, p) => sum + p.modules.length, 0);
-  const totalCompleted = completedModuleIds.size;
+  // Overall stats
+  const totalModules = paths.reduce((s, p) => s + p.modules.length, 0);
+  const totalCompleted = completedIds.size;
   const totalMinutes = paths.reduce(
-    (sum, p) => sum + p.modules.reduce((s, m) => s + m.readTimeMinutes, 0),
+    (s, p) => s + p.modules.reduce((m, mod) => m + mod.readTimeMinutes, 0),
     0
   );
   const completedMinutes = paths.reduce(
-    (sum, p) =>
-      sum +
+    (s, p) =>
+      s +
       p.modules
-        .filter((m) => completedModuleIds.has(m.id))
-        .reduce((s, m) => s + m.readTimeMinutes, 0),
+        .filter((m) => completedIds.has(m.id))
+        .reduce((m, mod) => m + mod.readTimeMinutes, 0),
     0
   );
 
+  // Group paths by category
+  const pathsByCategory: Record<string, typeof paths> = {};
+  for (const path of paths) {
+    if (!pathsByCategory[path.category]) pathsByCategory[path.category] = [];
+    pathsByCategory[path.category].push(path);
+  }
+  // Sort each group by level order
+  for (const cat of Object.keys(pathsByCategory)) {
+    pathsByCategory[cat].sort(
+      (a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99)
+    );
+  }
+
+  const overallPct =
+    totalModules > 0 ? Math.round((totalCompleted / totalModules) * 100) : 0;
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className="space-y-10">
+      {/* ── Header ── */}
       <div>
         <h1 className="text-3xl font-bold">Learning Paths</h1>
         <p className="text-slate-400 mt-1">
-          Structured study guides based on real-world data engineering topics. Read each article,
-          track your progress, and build deep expertise.
+          Three tracks, each with a clear beginner → intermediate → advanced
+          progression. Read every article, track your progress, and arrive
+          interview-ready.
         </p>
       </div>
 
-      {/* Overall Progress */}
+      {/* ── Overall Progress ── */}
       <Card className="border-slate-800 bg-slate-900/50">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-indigo-400">{totalCompleted}</div>
+              <div className="text-3xl font-bold text-indigo-400">
+                {totalCompleted}
+              </div>
               <div className="text-xs text-slate-500 mt-1">Articles Read</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-indigo-400">{totalModules}</div>
+              <div className="text-3xl font-bold text-indigo-400">
+                {totalModules}
+              </div>
               <div className="text-xs text-slate-500 mt-1">Total Articles</div>
             </div>
             <div className="text-center">
@@ -112,115 +170,194 @@ export default async function LearnPage() {
               <div className="text-xs text-slate-500 mt-1">Total Content</div>
             </div>
           </div>
-          {/* Overall progress bar */}
-          <div className="mt-4">
-            <div className="flex justify-between text-xs text-slate-500 mb-1">
-              <span>Overall progress</span>
-              <span>
-                {totalModules > 0 ? Math.round((totalCompleted / totalModules) * 100) : 0}%
-              </span>
-            </div>
-            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-600 rounded-full transition-all"
-                style={{
-                  width: `${totalModules > 0 ? (totalCompleted / totalModules) * 100 : 0}%`,
-                }}
-              />
-            </div>
+          <div className="flex justify-between text-xs text-slate-500 mb-1">
+            <span>Overall progress</span>
+            <span>{overallPct}%</span>
+          </div>
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-indigo-600 rounded-full transition-all"
+              style={{ width: `${overallPct}%` }}
+            />
           </div>
         </CardContent>
       </Card>
 
-      {/* Learning Paths Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {paths.map((path) => {
-          const completedInPath = path.modules.filter((m) =>
-            completedModuleIds.has(m.id)
-          ).length;
-          const totalInPath = path.modules.length;
-          const progressPct =
-            totalInPath > 0 ? Math.round((completedInPath / totalInPath) * 100) : 0;
-          const totalMins = path.modules.reduce((s, m) => s + m.readTimeMinutes, 0);
-          const isStarted = path.userProgress.length > 0;
-          const isCompleted = path.userProgress[0]?.completedAt != null;
+      {/* ── Tracks ── */}
+      {TRACKS.map((track) => {
+        const trackPaths = pathsByCategory[track.category] ?? [];
+        if (trackPaths.length === 0) return null;
 
-          return (
-            <Link key={path.id} href={`/learn/${path.slug}`} className="block group">
-              <Card className="border-slate-800 bg-slate-900/50 hover:border-indigo-700/50 hover:bg-slate-900 transition-all h-full">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <span className="text-2xl flex-shrink-0">{path.icon}</span>
-                      <div className="min-w-0">
-                        <CardTitle className="text-base leading-tight group-hover:text-indigo-300 transition-colors">
-                          {path.title}
-                        </CardTitle>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge className={`text-xs ${LEVEL_COLORS[path.level]}`}>
-                            {path.level.charAt(0) + path.level.slice(1).toLowerCase()}
-                          </Badge>
-                          <span className="text-xs text-slate-500">
-                            {CATEGORY_LABELS[path.category]}
-                          </span>
-                        </div>
+        // Track-level stats
+        const trackCompleted = trackPaths.reduce(
+          (s, p) => s + p.modules.filter((m) => completedIds.has(m.id)).length,
+          0
+        );
+        const trackTotal = trackPaths.reduce(
+          (s, p) => s + p.modules.length,
+          0
+        );
+        const trackPct =
+          trackTotal > 0 ? Math.round((trackCompleted / trackTotal) * 100) : 0;
+
+        return (
+          <div key={track.category} className="space-y-4">
+            {/* Track header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{track.icon}</span>
+                <div>
+                  <h2 className="text-xl font-semibold">{track.title}</h2>
+                  <p className="text-sm text-slate-500">{track.description}</p>
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+                <span>{trackCompleted}/{trackTotal} articles</span>
+                <span>·</span>
+                <span>{trackPct}% complete</span>
+              </div>
+            </div>
+
+            {/* Path cards — horizontal track with arrows between them */}
+            <div className="flex flex-col md:flex-row md:items-stretch gap-2">
+              {trackPaths.map((path, idx) => {
+                const completedInPath = path.modules.filter((m) =>
+                  completedIds.has(m.id)
+                ).length;
+                const totalInPath = path.modules.length;
+                const pct =
+                  totalInPath > 0
+                    ? Math.round((completedInPath / totalInPath) * 100)
+                    : 0;
+                const totalMins = path.modules.reduce(
+                  (s, m) => s + m.readTimeMinutes,
+                  0
+                );
+                const isStarted = path.userProgress.length > 0;
+                const isCompleted = !!path.userProgress[0]?.completedAt;
+                // "Suggested" dim — previous tier has 0% complete (not a hard lock)
+                const prevTierPct =
+                  idx > 0
+                    ? (() => {
+                        const prev = pathsByCategory[track.category][idx - 1];
+                        const prevDone = prev.modules.filter((m) =>
+                          completedIds.has(m.id)
+                        ).length;
+                        return prev.modules.length > 0
+                          ? prevDone / prev.modules.length
+                          : 1;
+                      })()
+                    : 1;
+                const isLocked = idx > 0 && prevTierPct === 0;
+
+                const cardContent = (
+                  <Card
+                    className={`
+                      border-slate-800 bg-slate-900/50 transition-all h-full
+                      ${isLocked ? "opacity-60" : `group ${LEVEL_CARD_ACCENT[path.level]}`}
+                      ${isCompleted ? "border-green-800/40" : ""}
+                    `}
+                  >
+                    <CardContent className="pt-5 pb-5 space-y-3">
+                      {/* Badge + icons */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge className={`text-xs ${LEVEL_BADGE[path.level]}`}>
+                          {path.level.charAt(0) +
+                            path.level.slice(1).toLowerCase()}
+                        </Badge>
+                        {isCompleted && (
+                          <CheckCircle2 className="h-4 w-4 text-green-400" />
+                        )}
+                        {isLocked && (
+                          <Lock className="h-3.5 w-3.5 text-slate-600" />
+                        )}
                       </div>
-                    </div>
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
-                    ) : (
-                      <ChevronRight className="h-5 w-5 text-slate-600 flex-shrink-0 mt-0.5 group-hover:text-indigo-400 transition-colors" />
-                    )}
-                  </div>
-                </CardHeader>
 
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-slate-400 leading-relaxed line-clamp-2">
-                    {path.description}
-                  </p>
-
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <div className="flex items-center gap-1">
-                      <BookOpen className="h-3.5 w-3.5" />
-                      <span>{totalInPath} articles</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>~{Math.round(totalMins / 60)}h read time</span>
-                    </div>
-                    {isStarted && (
-                      <span className="text-indigo-400 font-medium">
-                        {completedInPath}/{totalInPath} done
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Progress bar */}
-                  <div>
-                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          isCompleted ? "bg-green-500" : "bg-indigo-600"
+                      {/* Title */}
+                      <h3
+                        className={`font-semibold text-sm leading-snug ${
+                          isLocked
+                            ? "text-slate-500"
+                            : "text-slate-100 group-hover:text-indigo-300 transition-colors"
                         }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
+                      >
+                        {shortTitle(path.title)}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                        {path.description}
+                      </p>
+
+                      {/* Meta */}
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="h-3 w-3" />
+                          {totalInPath} articles
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          ~{Math.round(totalMins / 60)}h
+                        </span>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div>
+                        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              isCompleted
+                                ? "bg-green-500"
+                                : LEVEL_PROGRESS_COLOR[path.level]
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <p className="mt-1 text-xs">
+                          {isCompleted && (
+                            <span className="text-green-400">Completed ✓</span>
+                          )}
+                          {!isCompleted && isStarted && (
+                            <span className="text-slate-500">
+                              {completedInPath}/{totalInPath} done · {pct}%
+                            </span>
+                          )}
+                          {!isStarted && !isLocked && (
+                            <span className="text-slate-600">Not started</span>
+                          )}
+                          {isLocked && (
+                            <span className="text-slate-600">
+                              Suggested: start with the previous tier
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+
+                return (
+                  <Fragment key={path.id}>
+                    {/* Arrow between cards (desktop only) */}
+                    {idx > 0 && (
+                      <div className="hidden md:flex items-center justify-center flex-shrink-0 text-slate-700">
+                        <ArrowRight className="h-5 w-5" />
+                      </div>
+                    )}
+
+                    {/* Card — always clickable, locked just dims as a hint */}
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/learn/${path.slug}`} className="block h-full">
+                        {cardContent}
+                      </Link>
                     </div>
-                    {isStarted && !isCompleted && (
-                      <p className="text-xs text-slate-500 mt-1">{progressPct}% complete</p>
-                    )}
-                    {!isStarted && (
-                      <p className="text-xs text-slate-600 mt-1">Not started</p>
-                    )}
-                    {isCompleted && (
-                      <p className="text-xs text-green-400 mt-1">Completed ✓</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
+                  </Fragment>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
