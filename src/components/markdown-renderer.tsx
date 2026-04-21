@@ -2,6 +2,8 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Image from "next/image";
+import { MermaidDiagram } from "./mermaid-diagram";
 
 interface MarkdownRendererProps {
   content: string;
@@ -29,8 +31,57 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       prose-th:text-white prose-th:font-semibold prose-th:pb-3 prose-th:text-left
       prose-td:text-white/60 prose-td:py-2.5 prose-td:border-b prose-td:border-white/[0.06]
       prose-hr:border-white/10 prose-hr:my-10
+      prose-img:rounded-xl prose-img:border prose-img:border-white/10 prose-img:mx-auto
     ">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Intercept code blocks — render mermaid as diagram, rest as normal
+          code({ className, children, ...props }) {
+            const language = /language-(\w+)/.exec(className || "")?.[1];
+            const isBlock = !props.ref;
+
+            if (isBlock && language === "mermaid") {
+              return <MermaidDiagram chart={String(children).trim()} />;
+            }
+
+            if (isBlock) {
+              return (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            }
+
+            // Inline code
+            return (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          },
+
+          // Images — use Next.js Image with unoptimized for external/public paths
+          img({ src, alt }) {
+            if (!src) return null;
+            return (
+              <span className="block my-6">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={alt ?? ""}
+                  className="rounded-xl border border-white/10 mx-auto max-w-full"
+                />
+                {alt && (
+                  <span className="block text-center text-xs text-white/30 mt-2 italic">
+                    {alt}
+                  </span>
+                )}
+              </span>
+            );
+          },
+        }}
+      >
         {content}
       </ReactMarkdown>
     </div>

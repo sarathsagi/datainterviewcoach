@@ -85,47 +85,57 @@ Symbols:
 - Products belong to categories
 - Customers can have multiple shipping addresses
 
-**Logical model:**
+**Logical model as an ERD:**
 
-\`\`\`
-Customer
-  - customer_id (PK)
-  - email
-  - name
-  - created_at
+\`\`\`mermaid
+erDiagram
+    Customer ||--o{ Order : "places"
+    Customer ||--o{ Address : "has"
+    Order ||--o{ OrderItem : "contains"
+    Order }o--|| Address : "ships to"
+    Product ||--o{ OrderItem : "appears in"
+    Category ||--o{ Product : "groups"
+    Category ||--o{ Category : "parent of"
 
-Address
-  - address_id (PK)
-  - customer_id (FK → Customer)
-  - street, city, state, zip, country
-  - is_default
-
-Order
-  - order_id (PK)
-  - customer_id (FK → Customer)
-  - shipping_address_id (FK → Address)
-  - placed_at
-  - status  (ENUM: pending, shipped, delivered, cancelled)
-  - total_amount
-
-OrderItem
-  - order_item_id (PK)
-  - order_id (FK → Order)
-  - product_id (FK → Product)
-  - quantity
-  - unit_price_at_purchase   ← snapshot price, not current product price
-
-Category
-  - category_id (PK)
-  - name
-  - parent_category_id (FK → Category, self-referential for hierarchy)
-
-Product
-  - product_id (PK)
-  - category_id (FK → Category)
-  - name
-  - description
-  - current_price
+    Customer {
+        string customer_id PK
+        string email
+        string name
+        date created_at
+    }
+    Order {
+        string order_id PK
+        string customer_id FK
+        string shipping_address_id FK
+        date placed_at
+        string status
+        decimal total_amount
+    }
+    OrderItem {
+        string order_item_id PK
+        string order_id FK
+        string product_id FK
+        int quantity
+        decimal unit_price_at_purchase
+    }
+    Product {
+        string product_id PK
+        string category_id FK
+        string name
+        decimal current_price
+    }
+    Category {
+        string category_id PK
+        string name
+        string parent_category_id FK
+    }
+    Address {
+        string address_id PK
+        string customer_id FK
+        string street
+        string city
+        boolean is_default
+    }
 \`\`\`
 
 > **Key decision:** \`unit_price_at_purchase\` on \`OrderItem\` is a deliberate denormalization. Product prices change — you need the price at the time of purchase for correct revenue reporting, not today's price.
