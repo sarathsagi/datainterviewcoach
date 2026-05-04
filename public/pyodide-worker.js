@@ -83,8 +83,17 @@ self.onmessage = async (event) => {
       const argsJson = JSON.stringify(c.args ?? []);
       const expectedJson = JSON.stringify(c.expected);
 
+      // Pre-import the typing primitives users routinely use without
+      // importing them (LeetCode-style code expects `List`, `Dict`, etc.
+      // to "just work"). Costs ~0ms and skips a class of NameError that
+      // would otherwise be the user's first frustrating result.
       const program = `
 import json
+from typing import List, Dict, Tuple, Set, Optional, Any, Iterable, Iterator, Callable, Union
+from collections import defaultdict, Counter, deque, OrderedDict
+import heapq
+import math
+import re
 ${setup ?? ""}
 ${code}
 
