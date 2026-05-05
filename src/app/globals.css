@@ -40,6 +40,14 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -49,43 +57,77 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ─────────────────────────────────────────────────────────────
+ * LIGHT THEME — pastel palette (mint / pink / yellow accents)
+ * Canvas is near-white with a hint of cyan; "dark surfaces"
+ * (nav, primary buttons) are black. Status colors pull from the
+ * pastel family: mint = success, pink = info/featured, yellow =
+ * warning/pinned task.
+ * ───────────────────────────────────────────────────────────── */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #f7fbfb;           /* outer canvas, pale cyan-white */
+  --foreground: #0a0a0a;
+
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+
+  /* Primary = near-black, matching the sample's nav/button fill */
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f1f4f5;
+  --secondary-foreground: #0a0a0a;
+
+  --muted: #f1f4f5;
+  --muted-foreground: #6b7280;
+
+  /* Accent = mint green (completed / active state in the sample) */
+  --accent: #d6f2dd;
+  --accent-foreground: #0a0a0a;
+
+  --destructive: #dc2626;
+
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #0a0a0a;
+
+  /* Status colors — extra pastel tokens */
+  --success: #b8e6c5;
+  --success-foreground: #0a3a1a;
+  --info: #f3c8e4;               /* pink — "featured" / secondary card */
+  --info-foreground: #4a1538;
+  --warning: #ffe8a0;             /* pastel yellow — task / pinned */
+  --warning-foreground: #4a3b00;
+
+  /* Brand accent (indigo-ish CTA) — kept for auth / marketing links */
+  --brand: #4f46e5;
+  --brand-foreground: #ffffff;
+
+  --chart-1: #0a0a0a;
+  --chart-2: #b8e6c5;
+  --chart-3: #f3c8e4;
+  --chart-4: #ffe8a0;
+  --chart-5: #6b7280;
+
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #0a0a0a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d6f2dd;
+  --sidebar-accent-foreground: #0a0a0a;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #0a0a0a;
 }
 
+/* ─────────────────────────────────────────────────────────────
+ * DARK THEME — indigo/black, the original look
+ * ───────────────────────────────────────────────────────────── */
 .dark {
-  /* ── Base semantic tokens ──────────────────────────────── */
   --background: #06060a;
   --foreground: #f2f2f7;
   --card: #111116;
@@ -104,11 +146,23 @@
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.1);
   --ring: #6366f1;
+
+  --success: #16a34a;
+  --success-foreground: #d1fae5;
+  --info: #6366f1;
+  --info-foreground: #e0e7ff;
+  --warning: #ca8a04;
+  --warning-foreground: #fef9c3;
+
+  --brand: #6366f1;
+  --brand-foreground: #ffffff;
+
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+
   --sidebar: #111116;
   --sidebar-foreground: #f2f2f7;
   --sidebar-primary: #6366f1;
@@ -147,24 +201,43 @@
   }
 }
 
-/* ── Apple-style utilities ─────────────────────────────────────────────── */
+/* ── Theme-aware utilities ──────────────────────────────────────────────
+ * glass-card / surface originally hardcoded dark translucency. Now they
+ * key off the theme — light mode gets a white translucent surface, dark
+ * mode keeps the original frosted look.
+ * ────────────────────────────────────────────────────────────────────── */
 @layer utilities {
   .glass-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
+  .dark .glass-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
 
   .glass-card-elevated {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(28px);
     -webkit-backdrop-filter: blur(28px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255,255,255,0.06) inset;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  }
+  .dark .glass-card-elevated {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
   }
 
   .text-gradient {
+    background: linear-gradient(135deg, #0a0a0a 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .dark .text-gradient {
     background: linear-gradient(135deg, #f2f2f7 0%, #a5b4fc 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -172,7 +245,188 @@
   }
 
   .surface {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .dark .surface {
     background: #111116;
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
+
+  /* Nav chrome — used by dashboard-nav + marketing nav. The light
+   * variant is the pastel sample's black pill bar; the dark variant
+   * keeps the existing frosted indigo. */
+  .nav-chrome {
+    background: rgba(10, 10, 10, 0.92);
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(32px) saturate(180%);
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+  }
+  .dark .nav-chrome {
+    background: oklch(0.055 0.002 280 / 80%);
+    color: #ffffff;
+    border-bottom: 1px solid oklch(1 0 0 / 7%);
+  }
+
+  .popover-chrome {
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    color: #0a0a0a;
+  }
+  .dark .popover-chrome {
+    background: oklch(0.12 0.003 280 / 95%);
+    border: 1px solid oklch(1 0 0 / 10%);
+    color: #f2f2f7;
+  }
+}
+
+/* ── Protected content: casual-copy / casual-print deterrents ──────────
+ * Applied via the <ProtectedContent> wrapper on paid pages. These are
+ * deterrents, not locks — devtools or a screen reader bypass them. The
+ * real gate is server-side auth. See src/components/protected-content.tsx
+ * for the full rationale. */
+.protected-content {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Allow typing in form fields — we only want to deter reading, not break UX. */
+.protected-content input,
+.protected-content textarea,
+.protected-content [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+@media print {
+  body:has(.protected-content) * {
+    visibility: hidden !important;
+  }
+  body:has(.protected-content)::before {
+    content: "Printing is disabled for Data Interview Coach content.";
+    visibility: visible;
+    display: block;
+    padding: 2rem;
+    font-family: sans-serif;
+    font-size: 1rem;
+    color: #000;
+  }
+}
+
+/* ─── Prism syntax highlighting for the practice code editor ────────────────
+ *
+ * Custom theme rather than a stock Prism CSS file because:
+ *   - Stock themes assume a dark editor with bold colors that clash with
+ *     our muted/30 input surfaces.
+ *   - We need both light + dark mode behavior; stock themes are mode-locked.
+ *
+ * Token list per Prism's SQL/Python grammars: comment, prolog, doctype,
+ * cdata, punctuation, property, tag, boolean, number, constant, symbol,
+ * deleted, selector, attr-name, string, char, builtin, inserted, operator,
+ * entity, url, variable, atrule, attr-value, function, keyword, regex,
+ * important.
+ */
+
+.practice-code-editor-textarea,
+.practice-code-editor-pre {
+  /* react-simple-code-editor needs textarea + pre to share exact metrics */
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  caret-color: hsl(var(--foreground));
+}
+
+/* Light theme */
+.practice-code-editor-pre .token.comment,
+.practice-code-editor-pre .token.prolog,
+.practice-code-editor-pre .token.doctype,
+.practice-code-editor-pre .token.cdata {
+  color: #6b7280; /* slate-500 */
+  font-style: italic;
+}
+
+.practice-code-editor-pre .token.keyword,
+.practice-code-editor-pre .token.atrule,
+.practice-code-editor-pre .token.boolean,
+.practice-code-editor-pre .token.constant {
+  color: #7c3aed; /* violet-600 — SELECT/FROM/def/class */
+  font-weight: 600;
+}
+
+.practice-code-editor-pre .token.string,
+.practice-code-editor-pre .token.char,
+.practice-code-editor-pre .token.attr-value,
+.practice-code-editor-pre .token.regex {
+  color: #047857; /* emerald-700 — string literals */
+}
+
+.practice-code-editor-pre .token.number,
+.practice-code-editor-pre .token.symbol {
+  color: #c2410c; /* orange-700 — numeric literals */
+}
+
+.practice-code-editor-pre .token.function,
+.practice-code-editor-pre .token.class-name,
+.practice-code-editor-pre .token.builtin {
+  color: #1d4ed8; /* blue-700 — COUNT()/SUM()/list()/dict() */
+}
+
+.practice-code-editor-pre .token.operator,
+.practice-code-editor-pre .token.punctuation {
+  color: #4b5563; /* slate-600 — = + - / */
+}
+
+.practice-code-editor-pre .token.variable,
+.practice-code-editor-pre .token.property {
+  color: #b91c1c; /* red-700 — table/column refs */
+}
+
+/* Dark theme overrides — slightly desaturated and brightened so the
+ * tokens carry on the darker background without burning the eyes. */
+.dark .practice-code-editor-pre .token.comment,
+.dark .practice-code-editor-pre .token.prolog,
+.dark .practice-code-editor-pre .token.doctype,
+.dark .practice-code-editor-pre .token.cdata {
+  color: #9ca3af; /* slate-400 */
+}
+
+.dark .practice-code-editor-pre .token.keyword,
+.dark .practice-code-editor-pre .token.atrule,
+.dark .practice-code-editor-pre .token.boolean,
+.dark .practice-code-editor-pre .token.constant {
+  color: #c4b5fd; /* violet-300 */
+}
+
+.dark .practice-code-editor-pre .token.string,
+.dark .practice-code-editor-pre .token.char,
+.dark .practice-code-editor-pre .token.attr-value,
+.dark .practice-code-editor-pre .token.regex {
+  color: #6ee7b7; /* emerald-300 */
+}
+
+.dark .practice-code-editor-pre .token.number,
+.dark .practice-code-editor-pre .token.symbol {
+  color: #fdba74; /* orange-300 */
+}
+
+.dark .practice-code-editor-pre .token.function,
+.dark .practice-code-editor-pre .token.class-name,
+.dark .practice-code-editor-pre .token.builtin {
+  color: #93c5fd; /* blue-300 */
+}
+
+.dark .practice-code-editor-pre .token.operator,
+.dark .practice-code-editor-pre .token.punctuation {
+  color: #d1d5db; /* slate-300 */
+}
+
+.dark .practice-code-editor-pre .token.variable,
+.dark .practice-code-editor-pre .token.property {
+  color: #fca5a5; /* red-300 */
 }
