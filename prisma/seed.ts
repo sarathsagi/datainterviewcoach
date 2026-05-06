@@ -683,7 +683,10 @@ const learningPaths = [
     description:
       "Core skills every data engineer needs — Python coding patterns for interviews, Git commands, partitioning strategies, and platform comparison knowledge.",
     icon: "🛠️",
-    category: ContentCategory.ESSENTIAL_SKILLS,
+    // Recategorized to MISC: the modules here are a hodgepodge (git, partitioning,
+    // databricks-vs-snowflake) better suited to the catch-all bucket than the
+    // SQL+Python "Essential Skills" track that now lives in this enum.
+    category: ContentCategory.MISC,
     level: SkillLevel.BEGINNER,
     order: 13,
     modules: [

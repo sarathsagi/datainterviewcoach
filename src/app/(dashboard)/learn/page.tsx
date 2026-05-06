@@ -1,21 +1,53 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requirePageSession } from "@/lib/auth/require-page-session";
 import { Fragment } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, CheckCircle2, Clock, ArrowRight, Lock } from "lucide-react";
 
 // ─── Track definitions ────────────────────────────────────────────────────────
-const TRACKS = [
+// Display metadata for every `ContentCategory` enum value the schema supports.
+// We render a track for every category that has ≥1 published path — so adding
+// a new enum value only requires a single entry below, not a page rewrite.
+//
+// Order matters: the array order is the on-page order. Group "core skills"
+// first, then specializations, then meta/tools so beginners see the right
+// progression and advanced users find their specialty.
+const TRACK_META: { category: string; title: string; icon: string; description: string }[] = [
+  // ── 1. The "start here" foundational track. Beginners read this first;
+  //       experienced users skim. Everything else assumes this content. ──
+  {
+    category: "DATA_ENGINEERING_FUNDAMENTALS",
+    title: "Data Engineering Fundamentals",
+    icon: "🎓",
+    description:
+      "Start here. The mental models every DE interview probes — file formats, OLTP vs OLAP, batch vs streaming, idempotency, and the distributed-systems primer that makes every later track click.",
+  },
+  // ── 2. Day-one technical skills. SQL and Python are themselves
+  //       "fundamentals," but each is big enough to warrant its own track. ──
+  {
+    category: "ESSENTIAL_SKILLS",
+    title: "SQL & Python for Interviews",
+    icon: "🔧",
+    description:
+      "The two languages every DE interview leans on. SQL deep dive (joins, windows, optimization) plus Python for DE (data structures, generators, async, pandas/PySpark).",
+  },
+  // ── 3+. Specialty tracks, ordered roughly by how foundational they are. ──
   {
     category: "DATA_MODELING",
     title: "Data Modeling",
     icon: "📐",
     description:
       "Master dimensional modeling from first principles to FAANG-level exercises.",
+  },
+  {
+    category: "DATA_ARCHITECTURE",
+    title: "Data Architecture",
+    icon: "🏛️",
+    description:
+      "Lakehouses, medallion architecture, batch vs streaming, and the patterns that scale.",
   },
   {
     category: "SYSTEM_DESIGN",
@@ -25,11 +57,76 @@ const TRACKS = [
       "From ELT fundamentals and tool deep-dives to complete end-to-end system designs.",
   },
   {
-    category: "ESSENTIAL_SKILLS",
-    title: "Essential Skills & Misc",
-    icon: "🔧",
+    category: "STREAMING",
+    title: "Streaming Systems",
+    icon: "⚡",
     description:
-      "Open table formats, CDC, observability, and other key data engineering concepts.",
+      "Kafka, Flink, watermarks, exactly-once semantics — the streaming concepts interviewers actually probe.",
+  },
+  {
+    category: "CDC",
+    title: "Change Data Capture",
+    icon: "🔄",
+    description:
+      "Log-based CDC, ordering guarantees, schema evolution — patterns that show up in every modern pipeline.",
+  },
+  {
+    category: "ORCHESTRATION",
+    title: "Orchestration",
+    icon: "🎼",
+    description:
+      "Airflow, dbt, and the orchestration patterns that make the difference between a brittle and a bulletproof pipeline.",
+  },
+  {
+    category: "OPEN_TABLE_FORMATS",
+    title: "Open Table Formats",
+    icon: "📦",
+    description:
+      "Iceberg, Delta, and Hudi — the formats powering the modern lakehouse and the trade-offs between them.",
+  },
+  {
+    category: "SNOWFLAKE",
+    title: "Snowflake",
+    icon: "❄️",
+    description:
+      "Snowflake-specific architecture, performance tuning, and cost patterns.",
+  },
+  {
+    category: "DATABRICKS",
+    title: "Databricks",
+    icon: "🔥",
+    description:
+      "Databricks lakehouse architecture, Photon, Unity Catalog, and platform-specific interview material.",
+  },
+  {
+    category: "GCP",
+    title: "GCP Data Engineering",
+    icon: "☁️",
+    description:
+      "BigQuery, Dataflow, Pub/Sub, and the GCP-native patterns asked in Google interviews.",
+  },
+  {
+    category: "AI_ENGINEERING",
+    title: "AI Engineering",
+    icon: "🤖",
+    description:
+      "Vector stores, RAG pipelines, and the AI-engineering concepts that increasingly appear in DE loops.",
+  },
+  {
+    category: "CI_CD",
+    title: "CI/CD for Data",
+    icon: "🚦",
+    description:
+      "Pipeline testing, data quality gates, and the deployment patterns that separate junior from senior engineers.",
+  },
+  // ── Last. Career, communication, and cross-cutting content that
+  //       doesn't fit a technical specialty. ──
+  {
+    category: "MISC",
+    title: "Misc Data Engineering",
+    icon: "🎯",
+    description:
+      "Behavioral interviews, resume + portfolio, salary negotiation, and the cross-cutting career skills that decide whether you get the offer.",
   },
 ];
 
@@ -41,9 +138,9 @@ const LEVEL_ORDER: Record<string, number> = {
 };
 
 const LEVEL_BADGE: Record<string, string> = {
-  BEGINNER:     "bg-green-950 text-green-400 border border-green-800",
-  INTERMEDIATE: "bg-yellow-950 text-yellow-400 border border-yellow-800",
-  ADVANCED:     "bg-red-950 text-red-400 border border-red-800",
+  BEGINNER:     "bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400 border border-green-300 dark:border-green-800",
+  INTERMEDIATE: "bg-amber-50 dark:bg-yellow-950 text-amber-600 dark:text-yellow-400 border border-amber-300 dark:border-yellow-800",
+  ADVANCED:     "bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-800",
 };
 
 const LEVEL_PROGRESS_COLOR: Record<string, string> = {
@@ -65,8 +162,7 @@ function shortTitle(title: string): string {
 }
 
 export default async function LearnPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) redirect("/login");
+  const { session } = await requirePageSession();
 
   const profile = await prisma.profile.findUnique({
     where: { userId: session.user.id },
@@ -134,49 +230,49 @@ export default async function LearnPage() {
       {/* ── Header ── */}
       <div>
         <h1 className="text-3xl font-bold">Learning Paths</h1>
-        <p className="text-slate-400 mt-1">
-          Three tracks, each with a clear beginner → intermediate → advanced
-          progression. Read every article, track your progress, and arrive
-          interview-ready.
+        <p className="text-muted-foreground mt-1">
+          Tracks across every concept your interviews will probe — fundamentals,
+          architecture, streaming, the major cloud platforms, and the patterns
+          unique to senior loops. Read, track progress, and arrive ready.
         </p>
       </div>
 
       {/* ── Overall Progress ── */}
-      <Card className="border-slate-800 bg-slate-900/50">
+      <Card className="border-border bg-muted/50">
         <CardContent className="pt-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-indigo-400">
+              <div className="text-3xl font-bold text-brand">
                 {totalCompleted}
               </div>
-              <div className="text-xs text-slate-500 mt-1">Articles Read</div>
+              <div className="text-xs text-muted-foreground mt-1">Articles Read</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-indigo-400">
+              <div className="text-3xl font-bold text-brand">
                 {totalModules}
               </div>
-              <div className="text-xs text-slate-500 mt-1">Total Articles</div>
+              <div className="text-xs text-muted-foreground mt-1">Total Articles</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-indigo-400">
+              <div className="text-3xl font-bold text-brand">
                 {Math.round(completedMinutes / 60)}h
               </div>
-              <div className="text-xs text-slate-500 mt-1">Time Completed</div>
+              <div className="text-xs text-muted-foreground mt-1">Time Completed</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-indigo-400">
+              <div className="text-3xl font-bold text-brand">
                 {Math.round(totalMinutes / 60)}h
               </div>
-              <div className="text-xs text-slate-500 mt-1">Total Content</div>
+              <div className="text-xs text-muted-foreground mt-1">Total Content</div>
             </div>
           </div>
-          <div className="flex justify-between text-xs text-slate-500 mb-1">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
             <span>Overall progress</span>
             <span>{overallPct}%</span>
           </div>
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-600 rounded-full transition-all"
+              className="h-full bg-brand rounded-full transition-all"
               style={{ width: `${overallPct}%` }}
             />
           </div>
@@ -184,7 +280,7 @@ export default async function LearnPage() {
       </Card>
 
       {/* ── Tracks ── */}
-      {TRACKS.map((track) => {
+      {TRACK_META.map((track) => {
         const trackPaths = pathsByCategory[track.category] ?? [];
         if (trackPaths.length === 0) return null;
 
@@ -208,10 +304,10 @@ export default async function LearnPage() {
                 <span className="text-2xl">{track.icon}</span>
                 <div>
                   <h2 className="text-xl font-semibold">{track.title}</h2>
-                  <p className="text-sm text-slate-500">{track.description}</p>
+                  <p className="text-sm text-muted-foreground">{track.description}</p>
                 </div>
               </div>
-              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+              <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
                 <span>{trackCompleted}/{trackTotal} articles</span>
                 <span>·</span>
                 <span>{trackPct}% complete</span>
@@ -253,7 +349,7 @@ export default async function LearnPage() {
                 const cardContent = (
                   <Card
                     className={`
-                      border-slate-800 bg-slate-900/50 transition-all h-full
+                      border-border bg-muted/50 transition-all h-full
                       ${isLocked ? "opacity-60" : `group ${LEVEL_CARD_ACCENT[path.level]}`}
                       ${isCompleted ? "border-green-800/40" : ""}
                     `}
@@ -266,10 +362,10 @@ export default async function LearnPage() {
                             path.level.slice(1).toLowerCase()}
                         </Badge>
                         {isCompleted && (
-                          <CheckCircle2 className="h-4 w-4 text-green-400" />
+                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                         )}
                         {isLocked && (
-                          <Lock className="h-3.5 w-3.5 text-slate-600" />
+                          <Lock className="h-3.5 w-3.5 text-muted-foreground/60" />
                         )}
                       </div>
 
@@ -277,20 +373,20 @@ export default async function LearnPage() {
                       <h3
                         className={`font-semibold text-sm leading-snug ${
                           isLocked
-                            ? "text-slate-500"
-                            : "text-slate-100 group-hover:text-indigo-300 transition-colors"
+                            ? "text-muted-foreground"
+                            : "text-foreground group-hover:text-brand/80 transition-colors"
                         }`}
                       >
                         {shortTitle(path.title)}
                       </h3>
 
                       {/* Description */}
-                      <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
                         {path.description}
                       </p>
 
                       {/* Meta */}
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <BookOpen className="h-3 w-3" />
                           {totalInPath} articles
@@ -303,7 +399,7 @@ export default async function LearnPage() {
 
                       {/* Progress bar */}
                       <div>
-                        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all ${
                               isCompleted
@@ -315,18 +411,18 @@ export default async function LearnPage() {
                         </div>
                         <p className="mt-1 text-xs">
                           {isCompleted && (
-                            <span className="text-green-400">Completed ✓</span>
+                            <span className="text-green-600 dark:text-green-400">Completed ✓</span>
                           )}
                           {!isCompleted && isStarted && (
-                            <span className="text-slate-500">
+                            <span className="text-muted-foreground">
                               {completedInPath}/{totalInPath} done · {pct}%
                             </span>
                           )}
                           {!isStarted && !isLocked && (
-                            <span className="text-slate-600">Not started</span>
+                            <span className="text-muted-foreground/60">Not started</span>
                           )}
                           {isLocked && (
-                            <span className="text-slate-600">
+                            <span className="text-muted-foreground/60">
                               Suggested: start with the previous tier
                             </span>
                           )}
@@ -340,7 +436,7 @@ export default async function LearnPage() {
                   <Fragment key={path.id}>
                     {/* Arrow between cards (desktop only) */}
                     {idx > 0 && (
-                      <div className="hidden md:flex items-center justify-center flex-shrink-0 text-slate-700">
+                      <div className="hidden md:flex items-center justify-center flex-shrink-0 text-muted-foreground">
                         <ArrowRight className="h-5 w-5" />
                       </div>
                     )}

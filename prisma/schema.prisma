@@ -4,8 +4,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // On Neon / Supabase serverless, DATABASE_URL should point at the pooled
+  // (PgBouncer) endpoint so each lambda invocation doesn't exhaust Postgres
+  // connections. directUrl points at the direct connection and is what
+  // `prisma migrate` uses — pooled connections can't run DDL.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─── Auth Models (NextAuth) ───────────────────────────────────
@@ -23,19 +28,24 @@ model User {
   // Stripe
   stripeCustomerId String? @unique
 
-  accounts               Account[]
-  sessions               Session[]
-  profile                Profile?
-  subscription           Subscription?
-  studyPlans             StudyPlan[]
-  dailyProgress          DailyProgress[]
-  problemAttempts        ProblemAttempt[]
-  aiConversations        AIConversation[]
-  pathProgress           UserPathProgress[]
-  moduleProgress         UserModuleProgress[]
-  questionAttempts       UserQuestionAttempt[]
-  pathQuestionAttempts   UserPathQuestionAttempt[]
-  flashCardAttempts      UserFlashCardAttempt[]
+  accounts              Account[]
+  sessions              Session[]
+  profile               Profile?
+  subscription          Subscription?
+  studyPlans            StudyPlan[]
+  dailyProgress         DailyProgress[]
+  problemAttempts       ProblemAttempt[]
+  aiConversations       AIConversation[]
+  pathProgress          UserPathProgress[]
+  moduleProgress        UserModuleProgress[]
+  questionAttempts      UserQuestionAttempt[]
+  pathQuestionAttempts  UserPathQuestionAttempt[]
+  flashCardAttempts     UserFlashCardAttempt[]
+  mockInterviewSessions MockInterviewSession[]
+  mockInterviewLoops    MockInterviewLoop[]
+  quizAttempts          QuizAttempt[]
+  studyRecommendations  StudyRecommendation[]
+  masterySnapshots      MasterySnapshot[]
 }
 
 model Account {
@@ -97,16 +107,16 @@ model EmailVerificationToken {
 // ─── Billing Models ──────────────────────────────────────────
 
 model Subscription {
-  id                   String             @id @default(cuid())
-  userId               String             @unique
-  stripeSubscriptionId String             @unique
-  stripePriceId        String
+  id                     String             @id @default(cuid())
+  userId                 String             @unique
+  stripeSubscriptionId   String             @unique
+  stripePriceId          String
   stripeCurrentPeriodEnd DateTime
-  status               SubscriptionStatus @default(ACTIVE)
-  plan                 SubscriptionPlan   @default(PRO_MONTHLY)
-  cancelAtPeriodEnd    Boolean            @default(false)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  status                 SubscriptionStatus @default(ACTIVE)
+  plan                   SubscriptionPlan   @default(PRO_MONTHLY)
+  cancelAtPeriodEnd      Boolean            @default(false)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -122,23 +132,24 @@ enum SubscriptionStatus {
 
 enum SubscriptionPlan {
   PRO_MONTHLY
+  PRO_QUARTERLY
   PRO_YEARLY
 }
 
 // ─── App Models ───────────────────────────────────────────────
 
 model Profile {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  targetCompanies String[] @default([])
+  id              String     @id @default(cuid())
+  userId          String     @unique
+  targetCompanies String[]   @default([])
   interviewDate   DateTime?
   skillLevel      SkillLevel @default(BEGINNER)
-  hoursPerDay     Float    @default(2)
-  strengths       String[] @default([])
-  weaknesses      String[] @default([])
-  onboardingDone  Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  hoursPerDay     Float      @default(2)
+  strengths       String[]   @default([])
+  weaknesses      String[]   @default([])
+  onboardingDone  Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -156,7 +167,7 @@ model Topic {
   description String?
   order       Int           @default(0)
 
-  problems     Problem[]
+  problems      Problem[]
   studyPlanDays StudyPlanDay[]
 }
 
@@ -217,21 +228,31 @@ model UserPathProgress {
   path LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
 
   @@unique([userId, pathId])
+  // `userId` lookups drive the learn dashboard; the @@unique covers them,
+  // but add an explicit index for completedAt ordering when we show "paths
+  // you've finished" in progress views.
+  @@index([userId, completedAt])
 }
 
 model UserModuleProgress {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   userId      String
   moduleId    String
-  completedAt DateTime  @default(now())
+  completedAt DateTime @default(now())
 
   user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   module LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  // Count-completed-in-path query hits `where: { userId, moduleId in [...] }`
+  // — covered by @@unique. Single-user listings across all paths hit
+  // just `userId` which the composite index handles as a prefix.
 
   @@unique([userId, moduleId])
 }
 
 enum ContentCategory {
+  /// "Start here" foundational track — DE 101, file formats, OLTP/OLAP,
+  /// idempotency, distributed-systems primer. Position 1 in the IA.
+  DATA_ENGINEERING_FUNDAMENTALS
   DATA_MODELING
   CDC
   GCP
@@ -243,6 +264,12 @@ enum ContentCategory {
   AI_ENGINEERING
   OPEN_TABLE_FORMATS
   ESSENTIAL_SKILLS
+  STREAMING
+  ORCHESTRATION
+  /// Catch-all bucket for cross-cutting / career / soft-skill content
+  /// (behavioral interview, resume, negotiation). Last in the IA.
+  /// Long-term we may rename the user-facing label to "Career & Communication".
+  MISC
 }
 
 // ─── Practice Question Models ─────────────────────────────────
@@ -254,28 +281,42 @@ model PracticeQuestion {
   category    PracticeCategory
   difficulty  Difficulty
   description String
-  context     String?          // schema or setup code (markdown)
+  context     String? // schema or setup code (markdown)
   hints       String[]         @default([])
   solution    String
   explanation String
   tags        String[]         @default([])
+  /// Company filter for practice listings (parity with MockQuestion).
+  /// Bare company names like "Meta", "Google", "Amazon", "Netflix", "Stripe".
+  /// Empty for problems that aren't company-tagged.
+  companyTags String[]         @default([])
+  /// Test cases for the in-browser executor (Phase 4). Shape is flexible
+  /// per category — Python: { input, expected } pairs; SQL: { setupSql,
+  /// expectedRows }; algorithms: same as Python. Null until backfilled.
+  testCases   Json?
   order       Int              @default(0)
   isPublished Boolean          @default(true)
   createdAt   DateTime         @default(now())
 
   attempts UserQuestionAttempt[]
+
+  // Practice pages filter `where: { category, isPublished }` then order by `order`.
+  @@index([category, isPublished, order])
+  // Company-tag filter — Postgres supports GIN-indexed array contains, which
+  // Prisma maps to `where: { companyTags: { has: "Meta" } }`.
+  @@index([companyTags])
 }
 
 model PathQuestion {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   pathId      String
   question    String
-  options     Json     // string[]
-  answer      Int      // index of correct option (0-based)
+  options     Json // string[]
+  answer      Int // index of correct option (0-based)
   explanation String
-  order       Int      @default(0)
+  order       Int    @default(0)
 
-  path     LearningPath             @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  path     LearningPath              @relation(fields: [pathId], references: [id], onDelete: Cascade)
   attempts UserPathQuestionAttempt[]
 }
 
@@ -286,10 +327,43 @@ model UserQuestionAttempt {
   status     QuestionStatus
   updatedAt  DateTime       @default(now()) @updatedAt
 
-  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  question PracticeQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question    PracticeQuestion      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  submissions PracticeSubmission[]
 
   @@unique([userId, questionId])
+  // Dashboard filters by userId + status (e.g. "SOLVED this week"); the
+  // unique covers userId-scoped lookups, this helps status rollups.
+  @@index([userId, status])
+}
+
+/// Per-submission record for practice problems. Sibling to UserQuestionAttempt:
+/// the parent row is "this user × this problem, latest state" while this
+/// table is the append-only log of every Run / Submit click. Lets users
+/// review yesterday's botched attempt + see what they changed since.
+///
+/// `code` is capped client-side to 50K chars (matches mock-interview's cap).
+/// `passed` is null for "Run" without test cases, true/false for graded runs.
+model PracticeSubmission {
+  id         String   @id @default(cuid())
+  attemptId  String
+  /// User's code at submission time. Snapshot — not edited after.
+  code       String   @db.Text
+  /// True/false from the test-case runner; null when no testCases configured
+  /// for this problem (the run was a "type-and-peek" flow).
+  passed     Boolean?
+  /// Per-case results from the runner — same shape as RunResult.cases. Json
+  /// to leave room for evolution without migrations. Null when no run results
+  /// (user clicked Mark Solved without running).
+  caseResults Json?
+  /// Total runtime ms reported by the runner.
+  runtimeMs  Int?
+  createdAt  DateTime @default(now())
+
+  attempt UserQuestionAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  // History page: latest-N submissions for an attempt, newest first.
+  @@index([attemptId, createdAt(sort: Desc)])
 }
 
 model UserPathQuestionAttempt {
@@ -308,17 +382,18 @@ model UserPathQuestionAttempt {
 
 enum PracticeCategory {
   SQL
-  PYTHON
+  PYTHON_DE
+  ALGORITHMS
 }
 
 // ─── Flashcard Models ─────────────────────────────────────────
 
 model FlashCard {
   id          String   @id @default(cuid())
-  topic       String   // e.g. "Data Modeling", "SQL", "Streaming & CDC"
-  topicSlug   String   // e.g. "data-modeling", "sql"
-  front       String   // Concept / term / question
-  back        String   // Definition / explanation
+  topic       String // e.g. "Data Modeling", "SQL", "Streaming & CDC"
+  topicSlug   String // e.g. "data-modeling", "sql"
+  front       String // Concept / term / question
+  back        String // Definition / explanation
   order       Int      @default(0)
   isPublished Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -330,13 +405,92 @@ model UserFlashCardAttempt {
   id        String   @id @default(cuid())
   userId    String
   cardId    String
-  known     Boolean  // true = "Got it", false = "Review Again"
+  known     Boolean // true = "Got it", false = "Review Again"
   updatedAt DateTime @updatedAt
+  /// Leitner box (1-6). Got It promotes one box (capped at 6). Review Again
+  /// resets to 1. Box determines the next-review interval. Null on rows
+  /// from before the spaced-repetition migration — treated as box 1.
+  reviewBox    Int?
+  /// When this card next becomes "due" for review. Null means never reviewed
+  /// yet (don't surface in the due-queue; surface in the topic deck instead).
+  /// Computed at attempt time as updatedAt + INTERVALS[reviewBox].
+  nextReviewAt DateTime?
 
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   card FlashCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@unique([userId, cardId])
+  // "Cards still to review for user" = `where userId AND known = false`.
+  @@index([userId, known])
+  // Due-queue lookup: `where userId AND nextReviewAt <= now()`.
+  @@index([userId, nextReviewAt])
+}
+
+// ─── Quiz Mode Models (MCQ, 10 random Qs per attempt from a 50-Q pool) ───
+
+enum QuizDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+/// Pool of multiple-choice questions per topic. A QuizAttempt pulls 10
+/// questions from this pool, balanced by difficulty (3 Easy, 5 Medium, 2 Hard).
+model QuizQuestion {
+  id           String         @id @default(cuid())
+  topic        String // e.g. "SQL Concepts"
+  topicSlug    String // e.g. "sql"
+  question     String         @db.Text
+  options      Json // array of exactly 4 strings
+  correctIndex Int // 0–3; server-only — never send to client pre-grading
+  explanation  String         @db.Text
+  difficulty   QuizDifficulty
+  /// Sub-concept slug for the Progress page weakness map. Optional for
+  /// backwards-compat with rows seeded before tagging. Stable kebab-case
+  /// values like "window-functions" or "scd-type-2" — keep the slug list
+  /// short (6-10 per topic) so aggregation is meaningful.
+  subConcept   String?
+  isPublished  Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+
+  answers QuizAnswer[]
+
+  @@index([topicSlug, isPublished])
+  @@index([topicSlug, subConcept])
+  @@index([topicSlug, difficulty])
+}
+
+/// One quiz session. Consumes a slot from the user's daily quota on start.
+model QuizAttempt {
+  id          String    @id @default(cuid())
+  userId      String
+  topic       String // denormalized for display
+  topicSlug   String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime? // null = in-progress
+  score       Int? // null while in-progress; 0..totalCount on complete
+  totalCount  Int       @default(10)
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  // Quota check queries: WHERE userId AND startedAt >= startOfDayUtc.
+  @@index([userId, startedAt])
+  @@index([userId, topicSlug])
+}
+
+model QuizAnswer {
+  id            String   @id @default(cuid())
+  attemptId     String
+  questionId    String
+  selectedIndex Int // 0–3
+  isCorrect     Boolean
+  createdAt     DateTime @default(now())
+
+  attempt  QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question QuizQuestion @relation(fields: [questionId], references: [id])
+
+  @@unique([attemptId, questionId])
 }
 
 enum QuestionStatus {
@@ -370,16 +524,16 @@ enum Difficulty {
 }
 
 model StudyPlan {
-  id        String         @id @default(cuid())
+  id        String          @id @default(cuid())
   userId    String
   startDate DateTime
   endDate   DateTime
   totalDays Int
   status    StudyPlanStatus @default(ACTIVE)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
-  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   days StudyPlanDay[]
 }
 
@@ -414,6 +568,10 @@ model DailyProgress {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
+  // "Last 30 days of progress for user" — the @@unique indexes `userId` as
+  // a prefix, but an ordered-by-date descending pattern wants an explicit
+  // index for reverse-scan performance on the streak UI.
+  @@index([userId, date(sort: Desc)])
 }
 
 model ProblemAttempt {
@@ -428,6 +586,9 @@ model ProblemAttempt {
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   problem Problem @relation(fields: [problemId], references: [id])
+
+  @@index([userId, startedAt(sort: Desc)])
+  @@index([userId, status])
 }
 
 enum AttemptStatus {
@@ -446,4 +607,184 @@ model AIConversation {
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   problem Problem? @relation(fields: [problemId], references: [id])
+
+  @@index([userId, updatedAt(sort: Desc)])
+}
+
+// ─── Mock Interview Models ─────────────────────────────────────
+
+enum MockCategory {
+  PYTHON
+  SQL
+  DATA_MODELING
+  SYSTEM_DESIGN
+  BEHAVIORAL
+}
+
+enum MockSessionStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EVALUATED
+}
+
+model MockQuestion {
+  id          String       @id @default(cuid())
+  category    MockCategory
+  difficulty  Difficulty
+  title       String
+  prompt      String // question text shown to the candidate
+  context     String? // code stub, schema DDL, or business context
+  rubric      Json // structured evaluation rubric injected into the AI prompt
+  hints       String[]     @default([])
+  companyTags String[]     @default([])
+  timeMinutes Int          @default(30)
+  isPublished Boolean      @default(true)
+  order       Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  sessions MockInterviewSession[]
+
+  // Start route filters `where: { category, isPublished, (difficulty?) }`.
+  @@index([category, isPublished, difficulty])
+}
+
+model MockInterviewSession {
+  id          String            @id @default(cuid())
+  userId      String
+  questionId  String
+  startedAt   DateTime          @default(now())
+  submittedAt DateTime?
+  completedAt DateTime?
+  userAnswer  String?
+  evaluation  Json? // structured AI evaluation result
+  score       Int? // 0–100
+  status      MockSessionStatus @default(IN_PROGRESS)
+  createdAt   DateTime          @default(now())
+  /// When this session is part of a multi-question mixed loop, points at
+  /// the parent loop. Null for standalone single-question mocks (the
+  /// pre-existing flow). Lets the loop UI fetch all sessions for one loop
+  /// in a single query.
+  loopId      String?
+  /// Ordering within the loop (0-based). Drives "Question 2 of 4" display.
+  /// Null for non-loop sessions.
+  loopOrder   Int?
+  /// Candidate's answer to the AI-generated follow-up question. The
+  /// follow-up itself is stored inside `evaluation.follow_up` and only
+  /// becomes answerable after the main eval lands.
+  followUpAnswer     String?
+  /// AI evaluation of the follow-up answer. JSON to leave room for
+  /// structured feedback later — v1 stores `{ feedback: string,
+  /// answeredAt: ISO string }`.
+  followUpEvaluation Json?
+
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question MockQuestion        @relation(fields: [questionId], references: [id])
+  loop     MockInterviewLoop?  @relation(fields: [loopId], references: [id], onDelete: Cascade)
+
+  // History page paginates by `userId` + orderBy createdAt desc.
+  // Avg-score aggregation filters `userId` + `status = EVALUATED`.
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, status])
+  // Loop sessions fetch by parent loop, ordered by question position.
+  @@index([loopId, loopOrder])
+}
+
+/// Multi-question mock-interview loop — the "45-min Meta-style screen"
+/// experience. One loop owns N sessions (one per question), all rolled
+/// up under a single timer + final aggregate score.
+///
+/// Why a separate parent table instead of a "loopId" + "isLoop" pair on
+/// MockInterviewSession alone:
+///   - Atomic state for the loop (IN_PROGRESS/COMPLETED) independent of
+///     individual session states; lets the loop UI know "we're done" without
+///     scanning every child session.
+///   - Single-row aggregate fields (totalScore, totalMinutes) cached so the
+///     hub history can paginate without cross-table sums.
+model MockInterviewLoop {
+  id            String                @id @default(cuid())
+  userId        String
+  /// Loop preset that drove the question sampling. "SCREEN_45" is the v1
+  /// — 4 questions, 45 min total. Future presets (ONSITE_180, etc.) get
+  /// added as enum values.
+  preset        MockLoopPreset        @default(SCREEN_45)
+  startedAt     DateTime              @default(now())
+  completedAt   DateTime?
+  /// Total minutes the loop budgets (sum of per-question timeMinutes).
+  totalMinutes  Int
+  /// Aggregate score 0..100 averaged across evaluated sessions. Null
+  /// until at least one session in the loop is evaluated.
+  aggregateScore Int?
+  status        MockLoopStatus        @default(IN_PROGRESS)
+  createdAt     DateTime              @default(now())
+
+  user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions MockInterviewSession[]
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+enum MockLoopPreset {
+  SCREEN_45
+}
+
+enum MockLoopStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+/// AI-generated "what to study next" recommendation. Cached per user with
+/// a content-hash key — we re-use the latest row when the user's snapshot
+/// (mastery, quiz scores, days-to-interview) hasn't materially changed and
+/// it was generated in the last 24h. That keeps the LLM bill bounded and
+/// stops the page from feeling churn-y.
+///
+/// We append rows rather than upserting so we can audit prompt drift later
+/// (and let users see "previous recommendation" if useful). The most recent
+/// row wins; older rows can be pruned on a schedule.
+model StudyRecommendation {
+  id           String   @id @default(cuid())
+  userId       String
+  /// Stable hash of the snapshot inputs — see lib/progress/recommend.ts.
+  /// Lets us reuse a fresh rec when nothing meaningful has changed.
+  contextHash  String
+  /// Structured JSON: { steps: { topicSlug, topic, why, action, hours }[] }
+  recommendation Json
+  /// Token usage for cost monitoring (optional).
+  inputTokens  Int?
+  outputTokens Int?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Latest-rec lookup is `userId` + orderBy createdAt desc.
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, contextHash])
+}
+
+/// Daily snapshot of per-topic mastery for a user. Powers the
+/// "▲ +5% this week" delta on the topic mastery grid.
+///
+/// Written lazily on /progress visits: each render upserts today's row
+/// per topic via `createMany skipDuplicates`. A user who never visits
+/// doesn't have snapshots — that's fine because they're not seeing
+/// the delta column anyway.
+///
+/// `snapshotDate` is the UTC midnight of the day the snapshot represents,
+/// stored as a plain DateTime so range queries are index-friendly.
+model MasterySnapshot {
+  id           String   @id @default(cuid())
+  userId       String
+  topicSlug    String
+  cardsKnown   Int
+  cardsTotal   Int
+  /// UTC-midnight DateTime for the day this snapshot covers.
+  snapshotDate DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // One row per user × topic × day.
+  @@unique([userId, topicSlug, snapshotDate])
+  // Delta lookup hits this index: WHERE userId AND snapshotDate <= 7d ago.
+  @@index([userId, snapshotDate(sort: Desc)])
 }
