@@ -60,7 +60,12 @@ function editorLanguageFor(
 }
 
 export function RunPanel({ category, spec, starterCode, solution, questionId }: RunPanelProps) {
-  const [code, setCode] = useState(starterCode ?? "");
+  // Initial editor content — prefer the spec's authored starter code (which
+  // includes exact function signature + parameter names), then fall back to
+  // any prop-supplied starter, then empty. The spec is the highest-quality
+  // source because it was authored alongside the test cases.
+  const initialCode = spec?.starterCode ?? starterCode ?? "";
+  const [code, setCode] = useState(initialCode);
   const [result, setResult] = useState<RunResult | null>(null);
   const [running, startRun] = useTransition();
   const [showSolution, setShowSolution] = useState(false);
