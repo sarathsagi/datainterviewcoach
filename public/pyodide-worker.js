@@ -87,6 +87,14 @@ self.onmessage = async (event) => {
       // importing them (LeetCode-style code expects `List`, `Dict`, etc.
       // to "just work"). Costs ~0ms and skips a class of NameError that
       // would otherwise be the user's first frustrating result.
+      // Resolve the entrypoint flexibly so users can write code in any of:
+      //   1. The exact configured name           (def two_sum(...): ...)
+      //   2. camelCase variant                   (def twoSum(...): ...)  ← LeetCode habit
+      //   3. snake_case variant when the spec uses camelCase
+      //   4. Method on a `Solution` class         (LeetCode submission template)
+      // This mirrors the muscle memory of every coding-prep platform.
+      // Without it, candidates who write LeetCode-style code see
+      // "NameError: two_sum is not defined" and bounce.
       const program = `
 import json
 from typing import List, Dict, Tuple, Set, Optional, Any, Iterable, Iterator, Callable, Union
@@ -97,10 +105,53 @@ import re
 ${setup ?? ""}
 ${code}
 
-# Hand the test case off to the user's entrypoint.
+def __snake_to_camel(s):
+    parts = s.split("_")
+    return parts[0] + "".join(p.title() for p in parts[1:])
+
+def __camel_to_snake(s):
+    out = []
+    for i, ch in enumerate(s):
+        if ch.isupper() and i > 0:
+            out.append("_")
+        out.append(ch.lower())
+    return "".join(out)
+
+def __resolve_entrypoint():
+    """Find the user's solution function across naming conventions."""
+    name = ${JSON.stringify(entrypoint)}
+    candidates = [name]
+    if "_" in name:
+        candidates.append(__snake_to_camel(name))
+    if any(c.isupper() for c in name):
+        candidates.append(__camel_to_snake(name))
+    # 1. Free function in module scope (most common)
+    g = globals()
+    for c in candidates:
+        if c in g and callable(g[c]):
+            return g[c]
+    # 2. Method on a Solution class (LeetCode template). Instantiate
+    #    with no args — if __init__ requires args we let the error surface.
+    if "Solution" in g:
+        try:
+            __sol_instance = g["Solution"]()
+        except TypeError:
+            __sol_instance = None
+        if __sol_instance is not None:
+            for c in candidates:
+                if hasattr(__sol_instance, c):
+                    method = getattr(__sol_instance, c)
+                    if callable(method):
+                        return method
+    raise NameError(
+        f"Couldn't find your solution function. Expected one of: "
+        f"{', '.join(repr(c) for c in candidates)} (free function or method on Solution class)."
+    )
+
+__fn = __resolve_entrypoint()
 __args = json.loads(${JSON.stringify(argsJson)})
 __expected = json.loads(${JSON.stringify(expectedJson)})
-__actual = ${entrypoint}(*__args)
+__actual = __fn(*__args)
 
 # Round-trip __actual through JSON so tuples become lists, sets become
 # arrays — match how the JS side will compare.
